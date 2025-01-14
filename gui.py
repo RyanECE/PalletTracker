@@ -1,23 +1,32 @@
-import tkinter as tk
+import sys
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QTextEdit, QVBoxLayout, QWidget, QGraphicsScene, QGraphicsView
 import paho.mqtt.client as mqtt
 import json
+from zeroconf import Zeroconf, ServiceInfo
+import socket
 
-class RollerHockeyApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Palet de Roller Hockey Connecté")
+class RollerHockeyApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Palet de Roller Hockey Connecté")
         
-        # Créer un canevas pour le terrain
-        self.canvas = tk.Canvas(root, width=800, height=600, bg="lightgreen")
-        self.canvas.pack()
+        # Créer un widget central
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        
+        # Créer un layout vertical
+        self.layout = QVBoxLayout()
+        self.central_widget.setLayout(self.layout)
 
         # Ajouter un titre
-        self.title_label = tk.Label(root, text="Suivi de la position du palet", font=("Arial", 24))
-        self.title_label.pack()
+        self.title_label = QLabel("Suivi de la position du palet")
+        self.title_label.setStyleSheet("font-size: 24px;")
+        self.layout.addWidget(self.title_label)
 
         # Ajouter une zone de texte pour afficher les messages
-        self.message_area = tk.Text(root, height=10, width=80)
-        self.message_area.pack()
+        self.message_area = QTextEdit()
+        self.message_area.setReadOnly(True)
+        self.layout.addWidget(self.message_area)
 
         # Initialiser le client MQTT
         self.mqtt_client = mqtt.Client()
@@ -26,6 +35,23 @@ class RollerHockeyApp:
 
         # Démarrer la connexion MQTT automatiquement
         self.start_mqtt()
+
+        # Configurer mDNS pour le broker MQTT
+        self.setup_mdns()
+
+    def setup_mdns(self):
+        zeroconf = Zeroconf()
+        ip_address = socket.gethostbyname(socket.gethostname())
+        info = ServiceInfo(
+            "_mqtt._tcp.local.",
+            "brokerMQTTPtracker._mqtt._tcp.local.",
+            addresses=[socket.inet_aton(ip_address)],  # Remplacez par l'adresse IP de votre broker
+            port=1883,
+            properties={},
+            server="Ptracker.local"
+        )
+        zeroconf.register_service(info)
+        print("Service mDNS enregistré sous le nom : brokerMQTTPtracker")
 
     def start_mqtt(self):
         broker = "localhost"  # Remplacez par l'adresse IP locale de votre machine si nécessaire
@@ -62,11 +88,11 @@ class RollerHockeyApp:
             message = f"{message_prefix} Message: {msg.payload.decode()}\n"
         
         # Afficher le message dans la zone de texte
-        self.message_area.insert(tk.END, message)
-        self.message_area.see(tk.END)  # Faire défiler vers le bas
+        self.message_area.append(message)  # Utiliser append pour QTextEdit
 
 # Lancer l'application
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = RollerHockeyApp(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    window = RollerHockeyApp()
+    window.show()
+    sys.exit(app.exec())

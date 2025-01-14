@@ -12,7 +12,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 
 # Configuration de la connexion
-broker = "localhost"
+broker = "Ptracker.local"
 port = 1883
 topic = "capteurs/data2"  # Topic pour le deuxième publisher
 

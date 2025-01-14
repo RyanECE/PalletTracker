@@ -1,7 +1,9 @@
-import tkinter as tk
-from gui import RollerHockeyApp
+import sys
+from PySide6.QtWidgets import QApplication
+from gui_pyside6 import RollerHockeyApp
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = RollerHockeyApp(root)  # No need to pass an MQTT client here
-    root.mainloop()
+    app = QApplication(sys.argv)  # Créer l'instance QApplication en premier
+    window = RollerHockeyApp()
+    window.show()
+    sys.exit(app.exec())
