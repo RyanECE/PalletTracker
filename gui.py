@@ -15,10 +15,6 @@ class RollerHockeyApp:
         self.title_label = tk.Label(root, text="Suivi de la position du palet", font=("Arial", 24))
         self.title_label.pack()
 
-        # Ajouter un bouton pour démarrer la connexion MQTT
-        self.start_button = tk.Button(root, text="Démarrer la connexion MQTT", command=self.start_mqtt)
-        self.start_button.pack()
-
         # Ajouter une zone de texte pour afficher les messages
         self.message_area = tk.Text(root, height=10, width=80)
         self.message_area.pack()
@@ -28,8 +24,11 @@ class RollerHockeyApp:
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
 
+        # Démarrer la connexion MQTT automatiquement
+        self.start_mqtt()
+
     def start_mqtt(self):
-        broker = "localhost"
+        broker = "localhost"  # Remplacez par l'adresse IP locale de votre machine si nécessaire
         port = 1883
         self.mqtt_client.connect(broker, port)
         self.mqtt_client.loop_start()
@@ -39,20 +38,28 @@ class RollerHockeyApp:
         if rc == 0:
             print("Connecté au broker MQTT")
             client.subscribe("capteurs/data")
-            print("Abonné au topic: capteurs/data")
+            client.subscribe("capteurs/data1")
+            client.subscribe("capteurs/data2")
+            print("Abonné aux topics: capteurs/data, capteurs/data1, capteurs/data2")
         else:
             print(f"Échec de connexion, code: {rc}")
 
     def on_message(self, client, userdata, msg):
         print("\n=== Message Reçu ===")
-        print(f"Topic: {msg.topic}")
+        if msg.topic == "capteurs/data":
+            message_prefix = "Message du publisher principal:"
+        elif msg.topic == "capteurs/data1":
+            message_prefix = "Message du publisher 1:"
+        elif msg.topic == "capteurs/data2":
+            message_prefix = "Message du publisher 2:"
+        
         try:
             # Tentative de décodage JSON
             payload = json.loads(msg.payload.decode())
-            message = f"Données: {payload}\n"
+            message = f"{message_prefix} Données: {payload}\n"
         except json.JSONDecodeError:
             # Si ce n'est pas du JSON, affichage du message brut
-            message = f"Message: {msg.payload.decode()}\n"
+            message = f"{message_prefix} Message: {msg.payload.decode()}\n"
         
         # Afficher le message dans la zone de texte
         self.message_area.insert(tk.END, message)

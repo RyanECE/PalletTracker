@@ -1,19 +1,26 @@
-# subscriber.py
 import paho.mqtt.client as mqtt
 import json
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connecté au broker MQTT")
-        # Souscription au topic
+        # Souscription aux topics
         client.subscribe("capteurs/data")
-        print("Abonné au topic: capteurs/data")
+        client.subscribe("capteurs/data1")
+        client.subscribe("capteurs/data2")
+        print("Abonné aux topics: capteurs/data, capteurs/data1, capteurs/data2")
     else:
         print(f"Échec de connexion, code: {rc}")
 
 def on_message(client, userdata, msg):
     print("\n=== Message Reçu ===")
-    print(f"Topic: {msg.topic}")
+    if msg.topic == "capteurs/data":
+        print("Message du publisher principal:")
+    elif msg.topic == "capteurs/data1":
+        print("Message du publisher 1:")
+    elif msg.topic == "capteurs/data2":
+        print("Message du publisher 2:")
+    
     try:
         # Tentative de décodage JSON
         payload = json.loads(msg.payload.decode())
@@ -29,7 +36,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 # Configuration de la connexion
-broker = "localhost"
+broker = "localhost"  # Remplacez par l'adresse IP locale de votre machine si nécessaire
 port = 1883
 
 # Connexion au broker
