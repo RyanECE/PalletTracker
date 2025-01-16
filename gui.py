@@ -40,8 +40,14 @@ class RollerHockeyApp(QMainWindow):
         self.setup_mdns()
 
     def setup_mdns(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # Connexion factice à une IP publique pour découvrir l'interface réseau active
+            s.connect(("8.8.8.8", 80))
+            ip_address = s.getsockname()[0]
+        finally:
+            s.close()
         zeroconf = Zeroconf()
-        ip_address = socket.gethostbyname(socket.gethostname())
         info = ServiceInfo(
             "_mqtt._tcp.local.",
             "brokerMQTTPtracker._mqtt._tcp.local.",

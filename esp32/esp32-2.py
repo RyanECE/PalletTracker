@@ -1,0 +1,108 @@
+import time
+import json
+import random
+import socket
+from paho.mqtt import client as mqtt_client
+
+# Configuration Wi-Fi
+SSID = "Virus"
+PASSWORD = "e8f8e0bb"
+
+# Configuration MQTT
+MQTT_SERVER = "192.168.1.67"  # IP fixe du broker Mosquitto
+# MQTT_SERVER = "localhost"
+MQTT_PORT = 1883
+MQTT_TOPIC = "capteurs/data1"
+MQTT_CLIENT_ID = "ESP32-2"
+
+# Simulation de la connexion Wi-Fi
+def setup_wifi(ssid, password):
+    print(f"Connexion au Wi-Fi '{ssid}'...")
+    time.sleep(2)  # Simule le délai de connexion
+    # Obtenir une IP fictive
+    ip_address = socket.gethostbyname(socket.gethostname())
+    print(f"Connecté ! IP de l'ESP32 : {ip_address}")
+    return ip_address
+
+# Callback lors de la connexion au broker MQTT
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connecté au broker MQTT !")
+    else:
+        print(f"Erreur de connexion MQTT, code : {rc}")
+
+# Callback pour la déconnexion
+def on_disconnect(client, userdata, rc):
+    print("Déconnecté du broker MQTT.")
+
+# Callback pour les messages reçus (si nécessaire dans le futur)
+def on_message(client, userdata, message):
+    print(f"Message reçu sur le topic {message.topic}: {message.payload.decode()}")
+
+# Création du client MQTT
+def setup_mqtt():
+    client = mqtt_client.Client(client_id=MQTT_CLIENT_ID, protocol=mqtt_client.MQTTv311)
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_message = on_message
+    return client
+
+# Envoi des données simulées
+def send_mqtt_data(client, topic):
+    vitesse = random.uniform(10, 30)
+    position_x = random.uniform(0, 100)
+    position_y = random.uniform(0, 100)
+
+    message = {
+        "vitesse": round(vitesse, 2),
+        "x": round(position_x, 2),
+        "y": round(position_y, 2)
+    }
+
+    message_json = json.dumps(message)
+    result = client.publish(topic, message_json)
+    status = result[0]
+
+    if status == 0:
+        print(f"Envoi MQTT : {message_json}")
+    else:
+        print("Échec de l'envoi des données MQTT.")
+
+# Diffusion UDP
+def broadcast_udp():
+    import socket
+
+    # Définir l'adresse MAC pour ce simulateur
+    mac_address = "00:1A:2B:3C:4D:5F"
+
+    # Créer un socket UDP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+    # Envoyer la diffusion UDP
+    message = f"ESP32-2,{mac_address}"
+    sock.sendto(message.encode(), ("<broadcast>", 12345))  # Port de diffusion
+    print(f"Diffusion envoyée : {message}")
+
+    sock.close()
+
+if __name__ == "__main__":
+    # Simuler la configuration Wi-Fi
+    setup_wifi(SSID, PASSWORD)
+
+    # Configurer et connecter le client MQTT
+    client = setup_mqtt()
+    print("Connexion au broker MQTT...")
+    client.connect(MQTT_SERVER, MQTT_PORT)
+
+    # Boucle principale
+    client.loop_start()
+    try:
+        while True:
+            send_mqtt_data(client, MQTT_TOPIC)
+            time.sleep(2)  # Simule un envoi toutes les 2 secondes
+    except KeyboardInterrupt:
+        print("\nArrêt de l'émulateur ESP32.")
+    finally:
+        client.loop_stop()
+        client.disconnect()
