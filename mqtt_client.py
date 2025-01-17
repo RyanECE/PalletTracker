@@ -50,9 +50,9 @@ class MQTTClient:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print("Connecté au broker MQTT")
-            topics = [("capteurs/data", 0), ("capteurs/data1", 0), ("capteurs/data2", 0)]
+            topics = [("capteur/HG", 0), ("capteur/HD", 0), ("capteur/BM", 0)]
             client.subscribe(topics)
-            print("Abonné aux topics: capteurs/data, capteurs/data1, capteurs/data2")
+            print("Abonné aux topics: capteur/HG, capteur/HD, capteur/BM")
             if self.connection_callback:
                 self.connection_callback(True)
         else:
@@ -63,20 +63,11 @@ class MQTTClient:
     def on_message(self, client, userdata, msg):
         try:
             print("\n=== Message Reçu ===")
-            if msg.topic == "capteurs/data":
-                message_prefix = "Message du publisher principal:"
-            elif msg.topic == "capteurs/data1":
-                message_prefix = "Message du publisher 1:"
-            elif msg.topic == "capteurs/data2":
-                message_prefix = "Message du publisher 2:"
-                
-            try:
-                payload = json.loads(msg.payload.decode())
-                message = f"{message_prefix} Données: {payload}\n"
-            except json.JSONDecodeError:
-                message = f"{message_prefix} Message: {msg.payload.decode()}\n"
-                
+            payload = msg.payload.decode()
+            print(f"Données reçues: {payload}")
+
             if self.message_callback:
-                self.message_callback(message)
+                self.message_callback(payload)
+
         except Exception as e:
             print(f"Erreur lors du traitement du message: {e}")

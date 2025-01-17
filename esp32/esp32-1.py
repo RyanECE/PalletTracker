@@ -9,11 +9,11 @@ SSID = "Virus"
 PASSWORD = "e8f8e0bb"
 
 # Configuration MQTT
-MQTT_SERVER = "192.168.1.67"  # IP fixe du broker Mosquitto
+MQTT_SERVER = "172.20.10.2"  # IP fixe du broker Mosquitto
 # MQTT_SERVER = "localhost"
 MQTT_PORT = 1883
-MQTT_TOPIC = "capteurs/data"
-MQTT_CLIENT_ID = "ESP32-1"
+MQTT_TOPIC = "capteur/HG"
+MQTT_CLIENT_ID = "ESP32-HG"
 
 # Simulation de la connexion Wi-Fi
 def setup_wifi(ssid, password):
@@ -49,24 +49,15 @@ def setup_mqtt():
 
 # Envoi des données simulées
 def send_mqtt_data(client, topic):
-    vitesse = random.uniform(10, 30)
-    position_x = random.uniform(0, 100)
-    position_y = random.uniform(0, 100)
+    distance = round(random.uniform(0, 44.72), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
 
-    message = {
-        "vitesse": round(vitesse, 2),
-        "x": round(position_x, 2),
-        "y": round(position_y, 2)
-    }
-
-    message_json = json.dumps(message)
-    result = client.publish(topic, message_json)
-    status = result[0]
+    result = client.publish(topic, str(distance))  # Convertit la distance en chaîne de caractères avant de l'envoyer
+    status = result[0]  # Statut de la publication (0 = succès)
 
     if status == 0:
-        print(f"Envoi MQTT : {message_json}")
+        print(f"Distance publiée avec succès : {distance}")
     else:
-        print("Échec de l'envoi des données MQTT.")
+        print(f"Échec de publication de la distance : {distance}")
 
 # Diffusion UDP
 def broadcast_udp():

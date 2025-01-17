@@ -7,8 +7,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal, QObject, Slot
 from mqtt_client import MQTTClient
 from udp_discovery import UDPDiscoveryServer
+from hockey_rink import HockeyRink
 import json
 import socket
+import threading
 
 class SignalManager(QObject):
     esp32_discovered = Signal(str, str)  # device_name, mac_address
@@ -66,6 +68,43 @@ class RollerHockeyApp(QMainWindow):
         self.title_label.setStyleSheet("font-size: 24px; margin: 10px;")
         self.layout.addWidget(self.title_label)
         
+        # Terrain de hockey
+        self.hockey_rink = HockeyRink()
+        self.layout.addWidget(self.hockey_rink)
+        
+        # Bouton de test
+        test_button = QPushButton("Tester position aléatoire")
+        test_button.clicked.connect(self.test_random_position)
+        self.layout.addWidget(test_button)
+
+        # Contrôles MQTT
+        mqtt_container = QWidget()
+        mqtt_layout = QVBoxLayout(mqtt_container)  
+        mqtt_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Status et boutons sur la même ligne
+        status_button_layout = QHBoxLayout()
+
+        # Status
+        self.status_label = QLabel("Status: Déconnecté")
+        self.status_label.setStyleSheet("color: red;")
+        status_button_layout.addWidget(self.status_label)
+            
+        status_button_layout.addStretch()
+
+        # Boutons MQTT
+        self.start_button = QPushButton("Démarrer MQTT")
+        self.start_button.clicked.connect(self.start_mqtt)
+        status_button_layout.addWidget(self.start_button)
+
+        self.stop_button = QPushButton("Arrêter MQTT")
+        self.stop_button.clicked.connect(self.stop_mqtt)
+        self.stop_button.setEnabled(False)
+        status_button_layout.addWidget(self.stop_button)
+
+        mqtt_layout.addLayout(status_button_layout)
+        self.layout.addWidget(mqtt_container)
+
         # Liste des ESP32 avec titre
         devices_container = QWidget()
         devices_layout = QVBoxLayout(devices_container)
@@ -92,50 +131,11 @@ class RollerHockeyApp(QMainWindow):
         """)
         devices_layout.addWidget(self.esp_list)
         self.layout.addWidget(devices_container)
-        
-        # Contrôles MQTT
-        mqtt_container = QWidget()
-        mqtt_layout = QVBoxLayout(mqtt_container)
-        mqtt_layout.setContentsMargins(10, 10, 10, 10)
-        
-        # Status et boutons sur la même ligne
-        status_button_layout = QHBoxLayout()
-        
-        # Status
-        self.status_label = QLabel("Status: Déconnecté")
-        self.status_label.setStyleSheet("color: red;")
-        status_button_layout.addWidget(self.status_label)
-        
-        status_button_layout.addStretch()
-        
-        # Boutons MQTT
-        self.start_button = QPushButton("Démarrer MQTT")
-        self.start_button.clicked.connect(self.start_mqtt)
-        status_button_layout.addWidget(self.start_button)
-        
-        self.stop_button = QPushButton("Arrêter MQTT")
-        self.stop_button.clicked.connect(self.stop_mqtt)
-        self.stop_button.setEnabled(False)
-        status_button_layout.addWidget(self.stop_button)
-        
-        mqtt_layout.addLayout(status_button_layout)
-        self.layout.addWidget(mqtt_container)
-        
-        # Zone de messages
-        self.message_area = QTextEdit()
-        self.message_area.setReadOnly(True)
-        self.message_area.setMaximumHeight(150)  # Limiter la hauteur
-        self.message_area.setStyleSheet("""
-            QTextEdit {
-                border: 1px solid #cccccc;
-                border-radius: 4px;
-                background-color: #f8f9fa;
-            }
-        """)
-        self.layout.addWidget(self.message_area)
-        
-        # Définir une taille minimum pour la fenêtre
-        self.setMinimumSize(800, 600)
+
+    def test_random_position(self, d1=None, d2=None, d3=None):
+        if d1 is None or d2 is None or d3 is None:
+            d1, d2, d3 = self.hockey_rink.position_calculator.generate_random_distances()
+        success = self.hockey_rink.update_from_distances(d1, d2, d3)
 
     def update_message_area(self, message):
         """Mettre à jour la zone de message"""
@@ -164,11 +164,17 @@ class RollerHockeyApp(QMainWindow):
         try:
             if self.mqtt_client is None:
                 self.mqtt_client = MQTTClient(
-                    message_callback=self.update_message_area,
+                message_callback=self.test_random_position,
                     connection_callback=self.connection_status_changed
                 )
                 self.mqtt_client.start_mqtt()
                 self.message_area.append("Démarrage du client MQTT...\n")
+
+                # Démarrer MQTT dans un thread séparé
+                thread = threading.Thread(target=self.mqtt_handler.run, daemon=True)
+                thread.start()
+
+                print("MQTT démarré via le bouton.")
         except Exception as e:
             self.show_error("Erreur de démarrage", f"Impossible de démarrer le client MQTT: {str(e)}")
             self.mqtt_client = None

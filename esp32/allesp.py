@@ -3,6 +3,7 @@ import json
 import random
 import socket
 from paho.mqtt import client as mqtt_client
+import multiprocessing
 
 # Configuration Wi-Fi
 SSID = "Virus"
@@ -10,10 +11,8 @@ PASSWORD = "e8f8e0bb"
 
 # Configuration MQTT
 MQTT_SERVER = "172.20.10.2"  # IP fixe du broker Mosquitto
-# MQTT_SERVER = "localhost"
 MQTT_PORT = 1883
-MQTT_TOPIC = "capteur/HD"
-MQTT_CLIENT_ID = "ESP32-HD"
+MQTT_CLIENT_ID_PREFIX = "ESP32"  # Préfixe pour l'ID unique du client
 
 # Simulation de la connexion Wi-Fi
 def setup_wifi(ssid, password):
@@ -27,21 +26,21 @@ def setup_wifi(ssid, password):
 # Callback lors de la connexion au broker MQTT
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Connecté au broker MQTT !")
+        print(f"{client._client_id.decode()} - Connecté au broker MQTT !")
     else:
-        print(f"Erreur de connexion MQTT, code : {rc}")
+        print(f"Erreur de connexion MQTT pour {client._client_id.decode()}, code : {rc}")
 
 # Callback pour la déconnexion
 def on_disconnect(client, userdata, rc):
-    print("Déconnecté du broker MQTT.")
+    print(f"{client._client_id.decode()} - Déconnecté du broker MQTT.")
 
 # Callback pour les messages reçus (si nécessaire dans le futur)
 def on_message(client, userdata, message):
-    print(f"Message reçu sur le topic {message.topic}: {message.payload.decode()}")
+    print(f"{client._client_id.decode()} - Message reçu sur le topic {message.topic}: {message.payload.decode()}")
 
 # Création du client MQTT
-def setup_mqtt():
-    client = mqtt_client.Client(client_id=MQTT_CLIENT_ID, protocol=mqtt_client.MQTTv311)
+def setup_mqtt(client_id):
+    client = mqtt_client.Client(client_id=client_id, protocol=mqtt_client.MQTTv311)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = on_message
@@ -55,45 +54,66 @@ def send_mqtt_data(client, topic):
     status = result[0]  # Statut de la publication (0 = succès)
 
     if status == 0:
-        print(f"Distance publiée avec succès : {distance}")
+        print(f"{client._client_id.decode()} - Distance publiée avec succès : {distance}")
     else:
-        print(f"Échec de publication de la distance : {distance}")
+        print(f"{client._client_id.decode()} - Échec de publication de la distance : {distance}")
 
-# Diffusion UDP
+# Diffusion UDP (non utilisée dans ce cas)
 def broadcast_udp():
     import socket
 
     # Définir l'adresse MAC pour ce simulateur
-    mac_address = "00:1A:2B:3C:4D:5F"
+    mac_address = "00:1A:2B:3C:4D:5E"
 
     # Créer un socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     # Envoyer la diffusion UDP
-    message = f"ESP32-2,{mac_address}"
+    message = f"ESP32-1,{mac_address}"
     sock.sendto(message.encode(), ("<broadcast>", 12345))  # Port de diffusion
     print(f"Diffusion envoyée : {message}")
 
     sock.close()
 
-if __name__ == "__main__":
+# Fonction pour démarrer un processus ESP32
+def start_esp32_process(esp_id, topic):
     # Simuler la configuration Wi-Fi
     setup_wifi(SSID, PASSWORD)
 
     # Configurer et connecter le client MQTT
-    client = setup_mqtt()
-    print("Connexion au broker MQTT...")
+    client_id = f"{MQTT_CLIENT_ID_PREFIX}-{esp_id}"
+    client = setup_mqtt(client_id)
+    print(f"{client_id} - Connexion au broker MQTT...")
     client.connect(MQTT_SERVER, MQTT_PORT)
 
     # Boucle principale
     client.loop_start()
     try:
         while True:
-            send_mqtt_data(client, MQTT_TOPIC)
+            send_mqtt_data(client, topic)
             time.sleep(2)  # Simule un envoi toutes les 2 secondes
     except KeyboardInterrupt:
-        print("\nArrêt de l'émulateur ESP32.")
+        print(f"\nArrêt de l'émulateur {client_id}.")
     finally:
         client.loop_stop()
         client.disconnect()
+
+def start_esp32_simulations():
+    # Démarrage de trois processus différents pour trois ESP32 simulés
+    process1 = multiprocessing.Process(target=start_esp32_process, args=("HG", "capteur/HG"))
+    process2 = multiprocessing.Process(target=start_esp32_process, args=("HD", "capteur/HD"))
+    process3 = multiprocessing.Process(target=start_esp32_process, args=("BM", "capteur/BM"))
+
+    # Démarrage des processus
+    process1.start()
+    process2.start()
+    process3.start()
+
+    # Attendre que les processus se terminent
+    process1.join()
+    process2.join()
+    process3.join()
+
+if __name__ == "__main__":
+    start_esp32_simulations()
