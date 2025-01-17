@@ -276,19 +276,30 @@ class RollerHockeyApp(QMainWindow):
     def handle_esp_send(self, mac_address: str, should_send: bool):
         """Gère l'autorisation d'envoi des données"""
         try:
+            if not self.mqtt_client:
+                print("MQTT client n'est pas initialisé")
+                self.message_area.append("Erreur: Le client MQTT n'est pas démarré. Démarrez d'abord le serveur MQTT.\n")
+                return
+
             esp_widget = self.esp_widgets[mac_address]
             esp_widget.is_sending = should_send
             
-            if self.mqtt_client:
-                message = {
-                    'command': 'start_sending' if should_send else 'stop_sending'
-                }
-                
-                # Envoi de la commande via MQTT
-                self.mqtt_client.mqtt_client.publish(
-                    f"control/{mac_address}",
-                    json.dumps(message)
-                )
+            # Format du message modifié pour correspondre à ce qu'attend l'ESP32
+            message = {
+                'start_data': should_send
+            }
+            
+            print(f"Envoi du message MQTT à {mac_address}: {message}")
+            
+            # Envoi de la commande via MQTT
+            result = self.mqtt_client.mqtt_client.publish(
+                f"control/{mac_address}",
+                json.dumps(message)
+            )
+            
+            # Vérifier si l'envoi a réussi
+            if result.rc == 0:
+                print("Message MQTT envoyé avec succès")
                 
                 # Mise à jour de l'interface
                 if should_send:
@@ -299,10 +310,14 @@ class RollerHockeyApp(QMainWindow):
                     esp_widget.send_button.setText("Démarrer")
                     esp_widget.send_button.setStyleSheet("")
                     self.message_area.append(f"Arrêt de l'envoi des données pour {mac_address}\n")
-                    
+            else:
+                print(f"Échec de l'envoi MQTT avec code: {result.rc}")
+                self.message_area.append(f"Erreur lors de l'envoi de la commande (code {result.rc})\n")
+                
         except Exception as e:
-            self.show_error("Erreur de contrôle", f"Erreur lors de la commande d'envoi: {str(e)}")
-            print(f"Erreur détaillée: {str(e)}")
+            error_msg = f"Erreur lors de la commande d'envoi: {str(e)}"
+            print(f"Erreur détaillée: {error_msg}")
+            self.show_error("Erreur de contrôle", error_msg)
 
 
     def closeEvent(self, event):
