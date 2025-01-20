@@ -60,40 +60,34 @@ class MQTTClient:
             if self.connection_callback:
                 self.connection_callback(False)
 
-    # def on_message(self, client, userdata, msg):
-    #     try:
-    #         print("\n=== Message Reçu ===")
-    #         payload = msg.payload.decode()
-    #         print(f"Données reçues: {payload}")
-            
-    #         if msg.topic == "capteur/HG":
-    #             self.message_callback(float(payload), None, None)
-    #         elif msg.topic == "capteur/HD":
-    #             self.message_callback(None, float(payload), None)
-    #         elif msg.topic == "capteur/BM":
-    #             self.message_callback(None, None, float(payload))
-
-    #     except Exception as e:
-    #         print(f"Erreur lors du traitement du message: {e}")
-
     def on_message(self, client, userdata, msg):
         try:
             print("\n=== Message Reçu ===")
+            # Décodage du message MQTT
             payload = msg.payload.decode()
+            # Extraction des valeurs
+            addr_part, dist_part = payload.split(", ")
+            addr = addr_part.split(": ")[1]
+            dist = float(dist_part.split(": ")[1])
+            # Condition sur l'adresse
+            if addr == "0084":
+                print(f"L'adresse est {addr}, la distance est {dist}")
+                self.message_callback(None, None, dist)
+            elif addr == "0085":
+                print(f"L'adresse est {addr}, la distance est {dist}")
+                self.message_callback(None, dist, None)
+            elif addr == "0086":
+                print(f"L'adresse est {addr}, la distance est {dist}")
+                self.message_callback(dist, None, None)
+            else:
+                print("Adresse non reconnue")
             # print(f"Données reçues: {payload}")
-            
-            data = json.loads(payload)
-            indices = data.get("index", [])
-            values = data.get("values", [])
-            distances = dict(zip(indices, values))
-            # if msg.topic == "capteur/HG":
-            #     self.message_callback(float(payload), None, None)
-            # elif msg.topic == "capteur/HD":
-            #     self.message_callback(None, float(payload), None)
-            # elif msg.topic == "capteur/BM":
-            #     self.message_callback(None, None, float(payload))
-
-
-            self.message_callback(distances.get("HG", None), distances.get("HD", None), distances.get("BM", None))
+            # Traitement du message JSON
+            # data = json.loads(payload)
+            # indices = data.get("index", [])
+            # values = data.get("values", [])
+            # distances = dict(zip(indices, values))
+            # Récupération des 3 positions
+            # self.message_callback(distances.get("HG", None), distances.get("HD", None), distances.get("BM", None))
         except Exception as e:
             print(f"Erreur lors du traitement du message: {e}")

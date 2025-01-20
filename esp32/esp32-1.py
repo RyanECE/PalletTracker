@@ -49,9 +49,9 @@ def setup_mqtt():
 
 # Envoi des données simulées
 def send_mqtt_data(client, topic):
-    distance1 = round(random.uniform(0, 44.72), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
-    distance2 = round(random.uniform(0, 44.72), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
-    distance3 = round(random.uniform(0, 28.28), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
+    distance1 = round(random.uniform(0, 5.305), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
+    distance2 = round(random.uniform(0, 5.305), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
+    distance3 = round(random.uniform(0, 5.305), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
     distances = {
         "HG" : distance1,
         "HD" : distance2,
