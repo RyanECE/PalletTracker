@@ -250,10 +250,10 @@ class RollerHockeyApp(QMainWindow):
             # Stocker le widget
             self.esp_widgets[mac_address] = esp_widget
 
-    def handle_esp_connect(self, mac_address: str, should_connect: bool):
+    def handle_esp_connect(self, device_id: str, should_connect: bool):
         """Gère la connexion/déconnexion d'un ESP32"""
         try:
-            esp_widget = self.esp_widgets[mac_address]
+            esp_widget = self.esp_widgets[device_id]
             
             if should_connect:
                 # Obtenir l'IP locale
@@ -268,77 +268,69 @@ class RollerHockeyApp(QMainWindow):
                 message = {
                     'broker_ip': local_ip
                 }
-                print(f"Envoi de l'IP {local_ip} à l'ESP32 {mac_address}")
+                print(f"Envoi de l'IP {local_ip} à l'ESP32 {device_id}")
                 
                 # Envoyer l'IP à l'ESP32 via UDP
-                if self.discovery_server.send_response(mac_address, message):
-                    # Mettre à jour l'interface seulement si l'envoi a réussi
+                if self.discovery_server.send_response(device_id, message):
                     esp_widget.is_connected = True
                     esp_widget.connect_button.setText("Déconnecter")
                     esp_widget.connect_button.setStyleSheet("background-color: #ffcccc;")
                     esp_widget.send_button.setEnabled(True)
-                    self.message_area.append(f"IP {local_ip} envoyée à l'ESP32 {mac_address}\n")
+                    print(f"IP {local_ip} envoyée à l'ESP32 {device_id}")
                 else:
-                    self.message_area.append(f"Erreur: Impossible d'envoyer l'IP à l'ESP32 {mac_address}\n")
+                    print(f"Erreur: Impossible d'envoyer l'IP à l'ESP32 {device_id}")
             else:
-                esp_widget.is_connected = False
-                esp_widget.connect_button.setText("Connecter")
-                esp_widget.connect_button.setStyleSheet("")
-                esp_widget.send_button.setEnabled(False)
-                esp_widget.is_sending = False
-                esp_widget.send_button.setText("Démarrer")
-                esp_widget.send_button.setStyleSheet("")
-                self.message_area.append(f"ESP32 {mac_address} déconnecté\n")
-                
+                # Envoyer le signal stop à l'ESP32
+                message = {'stop': True}
+                if self.discovery_server.send_response(device_id, message):
+                    esp_widget.is_connected = False
+                    esp_widget.connect_button.setText("Connecter")
+                    esp_widget.connect_button.setStyleSheet("")
+                    esp_widget.send_button.setEnabled(False)
+                    esp_widget.is_sending = False
+                    esp_widget.send_button.setText("Démarrer")
+                    esp_widget.send_button.setStyleSheet("")
+                    print(f"ESP32 {device_id} déconnecté")
+                    
         except Exception as e:
             self.show_error("Erreur de contrôle", f"Erreur lors de la gestion de la connexion: {str(e)}")
             print(f"Erreur détaillée: {str(e)}")
 
-    def handle_esp_send(self, mac_address: str, should_send: bool):
-        """Gère l'autorisation d'envoi des données"""
+    def handle_esp_send(self, device_id: str, should_send: bool):
+        """Gère l'autorisation d'envoi des données par l'ESP32."""
         try:
-            if not self.mqtt_client:
-                print("MQTT client n'est pas initialisé")
-                self.message_area.append("Erreur: Le client MQTT n'est pas démarré. Démarrez d'abord le serveur MQTT.\n")
-                return
+            esp_widget = self.esp_widgets[device_id]
 
-            esp_widget = self.esp_widgets[mac_address]
-            esp_widget.is_sending = should_send
-            
-            # Format du message modifié pour correspondre à ce qu'attend l'ESP32
-            message = {
-                'start_data': should_send
-            }
-            
-            print(f"Envoi du message MQTT à {mac_address}: {message}")
-            
-            # Envoi de la commande via MQTT
-            result = self.mqtt_client.mqtt_client.publish(
-                f"control/{mac_address}",
-                json.dumps(message)
-            )
-            
-            # Vérifier si l'envoi a réussi
-            if result.rc == 0:
-                print("Message MQTT envoyé avec succès")
-                
-                # Mise à jour de l'interface
-                if should_send:
+            if should_send:
+                # On vérifie si le client MQTT est initialisé, sinon on le crée
+                if self.mqtt_client is None:
+                    self.mqtt_client = MQTTClient(
+                        message_callback=self.update_puck_position,
+                        connection_callback=self.connection_status_changed
+                    )
+                    self.mqtt_client.start_mqtt()
+                    print("Client MQTT démarré")
+
+                # Envoi du signal de démarrage à l'ESP32 via UDP
+                start_message = {}  # Message vide pour envoyer juste "true"
+                print(f"Envoi du signal de démarrage à {device_id}")
+                if self.discovery_server.send_response(device_id, start_message):
+                    esp_widget.is_sending = True
                     esp_widget.send_button.setText("Arrêter")
                     esp_widget.send_button.setStyleSheet("background-color: #ffcccc;")
-                    self.message_area.append(f"Démarrage de l'envoi des données pour {mac_address}\n")
+                    print(f"Signal de démarrage envoyé à {device_id}")
                 else:
-                    esp_widget.send_button.setText("Démarrer")
-                    esp_widget.send_button.setStyleSheet("")
-                    self.message_area.append(f"Arrêt de l'envoi des données pour {mac_address}\n")
+                    print(f"Erreur lors de l'envoi du signal de démarrage à {device_id}")
+
             else:
-                print(f"Échec de l'envoi MQTT avec code: {result.rc}")
-                self.message_area.append(f"Erreur lors de l'envoi de la commande (code {result.rc})\n")
-                
+                esp_widget.is_sending = False
+                esp_widget.send_button.setText("Démarrer")
+                esp_widget.send_button.setStyleSheet("")
+                print(f"Arrêt de l'envoi pour {device_id}")
+
         except Exception as e:
-            error_msg = f"Erreur lors de la commande d'envoi: {str(e)}"
-            print(f"Erreur détaillée: {error_msg}")
-            self.show_error("Erreur de contrôle", error_msg)
+            self.show_error("Erreur d'envoi", f"Erreur lors de la gestion des données : {str(e)}")
+            print(f"Erreur détaillée : {str(e)}")
 
 
     def closeEvent(self, event):

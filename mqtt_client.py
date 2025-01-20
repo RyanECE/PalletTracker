@@ -80,7 +80,7 @@ class MQTTClient:
         try:
             print("\n=== Message Reçu ===")
             payload = msg.payload.decode()
-            # print(f"Données reçues: {payload}")
+            print(f"Données reçues: {payload}")
             
             data = json.loads(payload)
             indices = data.get("index", [])
