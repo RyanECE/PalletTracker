@@ -64,10 +64,14 @@ class MQTTClient:
         try:
             print("\n=== Message Reçu ===")
             payload = msg.payload.decode()
-            print(f"Données reçues: {payload}")
+            # print(f"Données reçues: {payload}")
 
-            if self.message_callback:
-                self.message_callback(payload)
+            if msg.topic == "capteur/HG":
+                self.message_callback(float(payload), None, None)
+            elif msg.topic == "capteur/HD":
+                self.message_callback(None, float(payload), None)
+            elif msg.topic == "capteur/BM":
+                self.message_callback(None, None, float(payload))
 
         except Exception as e:
             print(f"Erreur lors du traitement du message: {e}")

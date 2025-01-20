@@ -44,6 +44,9 @@ class ESPListItem(QWidget):
 class RollerHockeyApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.d1 = None
+        self.d2 = None
+        self.d3 = None
         self.setWindowTitle("Palet de Roller Hockey Connecté")
         self.mqtt_client = None
         self.is_connected = False
@@ -73,9 +76,9 @@ class RollerHockeyApp(QMainWindow):
         self.layout.addWidget(self.hockey_rink)
         
         # Bouton de test
-        test_button = QPushButton("Tester position aléatoire")
-        test_button.clicked.connect(self.test_random_position)
-        self.layout.addWidget(test_button)
+        # test_button = QPushButton("Tester position aléatoire")
+        # test_button.clicked.connect(self.test_random_position)
+        # self.layout.addWidget(test_button)
 
         # Contrôles MQTT
         mqtt_container = QWidget()
@@ -132,10 +135,22 @@ class RollerHockeyApp(QMainWindow):
         devices_layout.addWidget(self.esp_list)
         self.layout.addWidget(devices_container)
 
-    def test_random_position(self, d1=None, d2=None, d3=None):
-        if d1 is None or d2 is None or d3 is None:
-            d1, d2, d3 = self.hockey_rink.position_calculator.generate_random_distances()
-        success = self.hockey_rink.update_from_distances(d1, d2, d3)
+    def update_puck_position(self, d1=None, d2=None, d3=None):
+        if d1 is not None:
+            self.d1 = d1
+        if d2 is not None:
+            self.d2 = d2
+        if d3 is not None:
+            self.d3 = d3
+
+        print(f"Données reçues HG: {self.d1}")
+        print(f"Données reçues HD: {self.d2}")
+        print(f"Données reçues BM: {self.d3}")
+        if self.d1 is not None and self.d2 is not None and self.d3 is not None:
+            try:
+                self.hockey_rink.update_from_distances(self.d1, self.d2, self.d3)
+            except Exception as e:
+                print(f"Erreur lors de la mise à jour de la position du palet: {str(e)}")
 
     def update_message_area(self, message):
         """Mettre à jour la zone de message"""
@@ -164,7 +179,7 @@ class RollerHockeyApp(QMainWindow):
         try:
             if self.mqtt_client is None:
                 self.mqtt_client = MQTTClient(
-                message_callback=self.test_random_position,
+                message_callback=self.update_puck_position,
                     connection_callback=self.connection_status_changed
                 )
                 self.mqtt_client.start_mqtt()

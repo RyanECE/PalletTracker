@@ -48,7 +48,7 @@ def setup_mqtt(client_id):
 
 # Envoi des données simulées
 def send_mqtt_data(client, topic):
-    distance = round(random.uniform(0, 44.72), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
+    distance = round(random.uniform(0, 1.22), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
 
     result = client.publish(topic, str(distance))  # Convertit la distance en chaîne de caractères avant de l'envoyer
     status = result[0]  # Statut de la publication (0 = succès)
