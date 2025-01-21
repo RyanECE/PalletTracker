@@ -61,8 +61,8 @@ class PuckPositionCalculator:
             x, y = solution
             
             # Si la solution est hors limites, projeter sur les bords du terrain
-            x = max(0, min(40, x))
-            y = max(0, min(20, y))
+            x = max(0, min(8, x))
+            y = max(0, min(4, y))
             
             return x, y
 

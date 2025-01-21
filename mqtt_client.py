@@ -66,18 +66,23 @@ class MQTTClient:
             # Décodage du message MQTT
             payload = msg.payload.decode()
             # Extraction des valeurs
-            addr_part, dist_part = payload.split(", ")
-            addr = addr_part.split(": ")[1]
-            dist = float(dist_part.split(": ")[1])
-            # Condition sur l'adresse
-            if addr == "0084":
-                print(f"L'adresse est {addr}, la distance est {dist}")
+            data = payload.split(";")  # Séparer les paires "clé:valeur"
+            values = {int(item.split(":")[0]): float(item.split(":")[1]) for item in data}
+
+            # Condition sur les adresses
+            if 84 in values:
+                dist = values[84]
+                print(f"L'adresse est 84, la distance est {dist}")
                 self.message_callback(None, None, dist)
-            elif addr == "0085":
-                print(f"L'adresse est {addr}, la distance est {dist}")
+
+            if 85 in values:
+                dist = values[85]
+                print(f"L'adresse est 85, la distance est {dist}")
                 self.message_callback(None, dist, None)
-            elif addr == "0086":
-                print(f"L'adresse est {addr}, la distance est {dist}")
+
+            if 86 in values:
+                dist = values[86]
+                print(f"L'adresse est 86, la distance est {dist}")
                 self.message_callback(dist, None, None)
             else:
                 print("Adresse non reconnue")
