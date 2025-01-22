@@ -182,6 +182,7 @@ class RollerHockeyApp(QMainWindow):
                     message_callback=self.update_puck_position,
                     connection_callback=self.connection_status_changed
                 )
+                self.mqtt_client.start_mosquitto()  # Démarrer Mosquitto avant de connecter le client
                 self.mqtt_client.start_mqtt()
                 print("Démarrage du client MQTT...")
 

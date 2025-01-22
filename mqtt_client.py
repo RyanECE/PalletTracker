@@ -5,7 +5,6 @@ import json
 import time
 import paho.mqtt.client as mqtt
 
-
 class MQTTClient:
     def __init__(self, message_callback, connection_callback):
         self.mqtt_client = mqtt.Client()
@@ -15,66 +14,67 @@ class MQTTClient:
         self.message_callback = message_callback
         self.connection_callback = connection_callback
         self.system = platform.system().lower()  # Détecte l'OS en cours
+        self.mosquitto_path = self._get_mosquitto_path()
+        self.mosquitto_process = None  # Stocke le processus Mosquitto
 
     def start_mosquitto(self):
-        """Démarrer le service Mosquitto."""
-        if self._is_service_active():
-            print("Le service Mosquitto est déjà actif.")
+        """Démarrer le service Mosquitto avec la configuration spécifique."""
+        if self.mosquitto_process and self.mosquitto_process.poll() is None:
+            print("Le service Mosquitto est déjà en cours d'exécution.")
             return
 
         print("Démarrage du service Mosquitto...")
-        start_cmd = self._get_service_command("start")
-        self._run_command(start_cmd)
-        print("Service Mosquitto démarré avec succès.")
+        config_path = os.path.join(os.path.dirname(__file__), 'mosquitto', 'mosquitto.conf')
+        start_cmd = [self.mosquitto_path, "-c", config_path]
+        self.mosquitto_process = subprocess.Popen(start_cmd)
+        time.sleep(2)  # Attendez que le service Mosquitto démarre
+        if self.mosquitto_process.poll() is None:
+            print("Service Mosquitto démarré avec succès.")
+        else:
+            print("Échec du démarrage du service Mosquitto.")
 
     def stop_mosquitto(self):
         """Arrêter le service Mosquitto."""
-        if not self._is_service_active():
-            print("Le service Mosquitto est déjà inactif.")
-            return
-
-        print("Arrêt du service Mosquitto...")
-        stop_cmd = self._get_service_command("stop")
-        self._run_command(stop_cmd)
-        print("Service Mosquitto arrêté avec succès.")
-
-    def _is_service_active(self):
-        """Vérifie si le service Mosquitto est actif."""
-        if self.system == "linux":
-            status_cmd = "systemctl is-active mosquitto"
-        elif self.system == "windows":
-            status_cmd = "sc query mosquitto | findstr /i RUNNING"
-        elif self.system == "darwin":  # macOS
-            status_cmd = "brew services list | grep mosquitto | grep started"
+        if self.mosquitto_process and self.mosquitto_process.poll() is None:
+            print("Arrêt du service Mosquitto...")
+            self.mosquitto_process.terminate()
+            try:
+                self.mosquitto_process.wait(timeout=5)
+                print("Service Mosquitto arrêté avec succès.")
+            except subprocess.TimeoutExpired:
+                print("Le processus Mosquitto ne s'est pas arrêté, forçant l'arrêt...")
+                self.mosquitto_process.kill()
         else:
-            raise NotImplementedError(f"Gestion des services non prise en charge pour {self.system}.")
+            print("Le service Mosquitto n'est pas en cours d'exécution.")
 
+    def _is_mosquitto_running(self):
+        """Vérifie si le service Mosquitto est en cours d'exécution."""
         try:
-            self._run_command(status_cmd)
-            return True
-        except RuntimeError:
+            output = subprocess.check_output(["systemctl", "is-active", "mosquitto"]).decode().strip()
+            return output == "active"
+        except subprocess.CalledProcessError:
             return False
 
-    def _get_service_command(self, action):
-        """Obtenir la commande pour démarrer ou arrêter Mosquitto."""
-        if self.system == "linux":
-            return f"sudo systemctl {action} mosquitto"
-        elif self.system == "windows":
-            return f"sc {action} mosquitto"
+    def _get_mosquitto_path(self):
+        """Obtient le chemin vers l'exécutable Mosquitto."""
+        base_path = os.path.join(os.path.dirname(__file__), 'mosquitto')
+        if self.system == "windows":
+            return os.path.join(base_path, 'windows', 'mosquitto.exe')
         elif self.system == "darwin":  # macOS
-            if action == "start":
-                return "brew services start mosquitto"
-            elif action == "stop":
-                return "brew services stop mosquitto"
-        raise NotImplementedError(f"Commandes pour {action} non prises en charge pour {self.system}.")
+            return os.path.join(base_path, 'macos', 'mosquitto')
+        else:  # Linux
+            return os.path.join(base_path, 'linux', 'mosquitto')
 
-    def _run_command(self, command):
-        """Exécuter une commande système."""
+    def _run_command(self, command, timeout=None, capture_output=False):
+        """Exécute une commande système."""
         try:
-            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if result.returncode != 0:
-                raise RuntimeError(f"Erreur : {result.stderr.strip()}")
-            return result.stdout.strip()
+            if capture_output:
+                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=timeout)
+                return result.stdout.strip()
+            else:
+                subprocess.run(command, shell=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            pass
         except Exception as e:
             raise RuntimeError(f"Erreur lors de l'exécution de la commande '{command}': {e}")
 
