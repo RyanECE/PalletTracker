@@ -14,8 +14,24 @@ class MQTTClient:
         self.message_callback = message_callback
         self.connection_callback = connection_callback
         self.system = platform.system().lower()  # Détecte l'OS en cours
+        self.architecture = self._get_architecture()  # Detects the architecture
+        print(f"Architecture detected: {self.architecture}")  # Debugging line
         self.mosquitto_path = self._get_mosquitto_path()
         self.mosquitto_process = None  # Stocke le processus Mosquitto
+
+    def _get_architecture(self):
+        """Detects the system architecture."""
+        arch = platform.machine().lower()
+        if arch in ["x86_64", "amd64"]:
+            return "x86_64"
+        elif arch in ["arm64", "aarch64"]:
+            return "arm64"
+        elif arch.startswith("arm"):
+            return "arm"
+        elif arch in ["i386", "i686"]:
+            return "x86"
+        else:
+            raise RuntimeError(f"Unsupported architecture: {arch}")
 
     def start_mosquitto(self):
         """Démarrer le service Mosquitto avec la configuration spécifique."""
@@ -24,6 +40,14 @@ class MQTTClient:
             return
 
         print("Démarrage du service Mosquitto...")
+        
+        # Configure LD_LIBRARY_PATH only for Linux
+        if self.system == "linux":
+            mosquitto_bin_dir = os.path.join(os.path.dirname(self.mosquitto_path), 'lib')
+            current_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
+            new_ld_library_path = f"{mosquitto_bin_dir}:{current_ld_library_path}"
+            os.environ["LD_LIBRARY_PATH"] = new_ld_library_path
+
         config_path = os.path.join(os.path.dirname(__file__), 'mosquitto', 'mosquitto.conf')
         start_cmd = [self.mosquitto_path, "-c", config_path]
         self.mosquitto_process = subprocess.Popen(start_cmd)
@@ -59,11 +83,13 @@ class MQTTClient:
         """Obtient le chemin vers l'exécutable Mosquitto."""
         base_path = os.path.join(os.path.dirname(__file__), 'mosquitto')
         if self.system == "windows":
-            return os.path.join(base_path, 'windows', 'mosquitto.exe')
+            return os.path.join(base_path, 'windows', self.architecture,'mosquitto.exe')
         elif self.system == "darwin":  # macOS
             return os.path.join(base_path, 'macos', 'mosquitto')
-        else:  # Linux
-            return os.path.join(base_path, 'linux', 'mosquitto')
+        elif self.system == "linux":  # Linux
+            return os.path.join(base_path, 'linux', self.architecture, 'mosquitto')
+        else:
+            raise RuntimeErrror(f"Unsupported operating system: {self.system}")
 
     def _run_command(self, command, timeout=None, capture_output=False):
         """Exécute une commande système."""
