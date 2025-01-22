@@ -85,7 +85,7 @@ class MQTTClient:
         if self.system == "windows":
             return os.path.join(base_path, 'windows', self.architecture,'mosquitto.exe')
         elif self.system == "darwin":  # macOS
-            return os.path.join(base_path, 'macos', 'mosquitto')
+            return os.path.join(base_path, 'macos',self.architecture, 'mosquitto')
         elif self.system == "linux":  # Linux
             return os.path.join(base_path, 'linux', self.architecture, 'mosquitto')
         else:
