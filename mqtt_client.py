@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 import subprocess
 import json
@@ -83,7 +84,7 @@ class MQTTClient:
         """Obtient le chemin vers l'exécutable Mosquitto."""
         base_path = os.path.join(os.path.dirname(__file__), 'mosquitto')
         if self.system == "windows":
-            return os.path.join(base_path, 'windows', self.architecture,'mosquitto.exe')
+            return os.path.join(base_path, 'windows', 'mosquitto.exe')
         elif self.system == "darwin":  # macOS
             return os.path.join(base_path, 'macos',self.architecture, 'mosquitto')
         elif self.system == "linux":  # Linux
