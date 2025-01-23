@@ -48,11 +48,12 @@ class PuckPositionCalculator:
             solution = np.linalg.solve(AT_A, AT_b)
             x, y = solution
             
-            # Envoyer les données via le port série
-            send_position(round(x, 2), round(y, 2))
+            
             # Si la solution est hors limites, projeter sur les bords du terrain
             x = max(0, min(40, x))
             y = max(0, min(20, y))
+            # Envoyer les données via le port série
+            send_position(int(x), int(y))
             return x, y
 
         except Exception as e:
