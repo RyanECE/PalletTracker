@@ -54,34 +54,25 @@ class UDPDiscoveryServer:
                 if not self.running:
                     break
 
-    def send_response(self, device_id: str, message: dict):
-        """Envoie une réponse à l'ESP32"""
+    def send_response(self, device_id: str, message):
         try:
             if self.esp32_addr is None:
                 print("Aucun ESP32 n'a été détecté")
                 return False
-            
-            if 'broker_ip' in message:
-                # Envoi de l'IP
-                broker_ip = message['broker_ip']
-                print(f"Envoi IP {broker_ip} à {self.esp32_addr}")
-                sent = self.udp_socket.sendto(broker_ip.encode(), self.esp32_addr)
-                print(f"Envoyé {sent} octets")
-                return True
-            elif 'stop' in message:
-                # Envoi du signal d'arrêt
-                print(f"Envoi signal 'stop' à {self.esp32_addr}")
-                sent = self.udp_socket.sendto("stop".encode(), self.esp32_addr)
-                self.esp32_addr = None  # On oublie l'ESP32
-                print(f"Envoyé {sent} octets")
-                return True
-            else:
-                # Envoi du signal de démarrage
-                print(f"Envoi 'true' à {self.esp32_addr}")
-                sent = self.udp_socket.sendto("true".encode(), self.esp32_addr)
-                print(f"Envoyé {sent} octets")
-                return True
                 
+            if isinstance(message, str):
+                print(f"Envoi '{message}' à {self.esp32_addr}")
+                sent = self.udp_socket.sendto(message.encode(), self.esp32_addr)
+                if message == "deconnect":
+                    self.esp32_addr = None
+                return True
+            elif isinstance(message, dict):
+                if 'broker_ip' in message:
+                    broker_ip = message['broker_ip']
+                    sent = self.udp_socket.sendto(broker_ip.encode(), self.esp32_addr)
+                    return True
+                    
+            return False
         except Exception as e:
             print(f"Erreur envoi UDP: {e}")
             return False

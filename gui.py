@@ -251,12 +251,10 @@ class RollerHockeyApp(QMainWindow):
             self.esp_widgets[mac_address] = esp_widget
 
     def handle_esp_connect(self, device_id: str, should_connect: bool):
-        """Gère la connexion/déconnexion d'un ESP32"""
         try:
             esp_widget = self.esp_widgets[device_id]
             
             if should_connect:
-                # Obtenir l'IP locale
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 try:
                     s.connect(('8.8.8.8', 80))
@@ -264,25 +262,13 @@ class RollerHockeyApp(QMainWindow):
                 finally:
                     s.close()
 
-                # Créer le message avec uniquement l'IP
-                message = {
-                    'broker_ip': local_ip
-                }
-                print(f"Envoi de l'IP {local_ip} à l'ESP32 {device_id}")
-                
-                # Envoyer l'IP à l'ESP32 via UDP
-                if self.discovery_server.send_response(device_id, message):
+                if self.discovery_server.send_response(device_id, local_ip):
                     esp_widget.is_connected = True
                     esp_widget.connect_button.setText("Déconnecter")
                     esp_widget.connect_button.setStyleSheet("background-color: #ffcccc;")
                     esp_widget.send_button.setEnabled(True)
-                    print(f"IP {local_ip} envoyée à l'ESP32 {device_id}")
-                else:
-                    print(f"Erreur: Impossible d'envoyer l'IP à l'ESP32 {device_id}")
             else:
-                # Envoyer le signal stop à l'ESP32
-                message = {'stop': True}
-                if self.discovery_server.send_response(device_id, message):
+                if self.discovery_server.send_response(device_id, "deconnect"):  # "deconnect" au lieu de "stop"
                     esp_widget.is_connected = False
                     esp_widget.connect_button.setText("Connecter")
                     esp_widget.connect_button.setStyleSheet("")
@@ -290,47 +276,32 @@ class RollerHockeyApp(QMainWindow):
                     esp_widget.is_sending = False
                     esp_widget.send_button.setText("Démarrer")
                     esp_widget.send_button.setStyleSheet("")
-                    print(f"ESP32 {device_id} déconnecté")
-                    
         except Exception as e:
             self.show_error("Erreur de contrôle", f"Erreur lors de la gestion de la connexion: {str(e)}")
-            print(f"Erreur détaillée: {str(e)}")
 
     def handle_esp_send(self, device_id: str, should_send: bool):
-        """Gère l'autorisation d'envoi des données par l'ESP32."""
         try:
             esp_widget = self.esp_widgets[device_id]
-
+            
             if should_send:
-                # On vérifie si le client MQTT est initialisé, sinon on le crée
                 if self.mqtt_client is None:
                     self.mqtt_client = MQTTClient(
                         message_callback=self.update_puck_position,
                         connection_callback=self.connection_status_changed
                     )
                     self.mqtt_client.start_mqtt()
-                    print("Client MQTT démarré")
-
-                # Envoi du signal de démarrage à l'ESP32 via UDP
-                start_message = {}  # Message vide pour envoyer juste "true"
-                print(f"Envoi du signal de démarrage à {device_id}")
-                if self.discovery_server.send_response(device_id, start_message):
-                    esp_widget.is_sending = True
-                    esp_widget.send_button.setText("Arrêter")
-                    esp_widget.send_button.setStyleSheet("background-color: #ffcccc;")
-                    print(f"Signal de démarrage envoyé à {device_id}")
-                else:
-                    print(f"Erreur lors de l'envoi du signal de démarrage à {device_id}")
-
+                
+                self.discovery_server.send_response(device_id, "start")  # Envoi de "start"
+                esp_widget.is_sending = True
+                esp_widget.send_button.setText("Arrêter")
+                esp_widget.send_button.setStyleSheet("background-color: #ffcccc;")
             else:
+                self.discovery_server.send_response(device_id, "stop")  # Envoi de "stop"
                 esp_widget.is_sending = False
                 esp_widget.send_button.setText("Démarrer")
                 esp_widget.send_button.setStyleSheet("")
-                print(f"Arrêt de l'envoi pour {device_id}")
-
         except Exception as e:
             self.show_error("Erreur d'envoi", f"Erreur lors de la gestion des données : {str(e)}")
-            print(f"Erreur détaillée : {str(e)}")
 
 
     def closeEvent(self, event):

@@ -79,21 +79,36 @@ class MQTTClient:
     def on_message(self, client, userdata, msg):
         try:
             print("\n=== Message Reçu ===")
+            # Décodage du message MQTT
             payload = msg.payload.decode()
-            print(f"Données reçues: {payload}")
-            
-            data = json.loads(payload)
-            indices = data.get("index", [])
-            values = data.get("values", [])
-            distances = dict(zip(indices, values))
-            # if msg.topic == "capteur/HG":
-            #     self.message_callback(float(payload), None, None)
-            # elif msg.topic == "capteur/HD":
-            #     self.message_callback(None, float(payload), None)
-            # elif msg.topic == "capteur/BM":
-            #     self.message_callback(None, None, float(payload))
+            # Extraction des valeurs
+            data = payload.split(";")  # Séparer les paires "clé:valeur"
+            values = {int(item.split(":")[0]): float(item.split(":")[1]) for item in data}
 
+            # Condition sur les adresses
+            if 84 in values:
+                dist = values[84]
+                print(f"L'adresse est 84, la distance est {dist}")
+                self.message_callback(None, None, dist)
 
-            self.message_callback(distances.get("HG", None), distances.get("HD", None), distances.get("BM", None))
+            if 85 in values:
+                dist = values[85]
+                print(f"L'adresse est 85, la distance est {dist}")
+                self.message_callback(None, dist, None)
+
+            if 86 in values:
+                dist = values[86]
+                print(f"L'adresse est 86, la distance est {dist}")
+                self.message_callback(dist, None, None)
+            else:
+                print("Adresse non reconnue")
+            # print(f"Données reçues: {payload}")
+            # Traitement du message JSON
+            # data = json.loads(payload)
+            # indices = data.get("index", [])
+            # values = data.get("values", [])
+            # distances = dict(zip(indices, values))
+            # Récupération des 3 positions
+            # self.message_callback(distances.get("HG", None), distances.get("HD", None), distances.get("BM", None))
         except Exception as e:
             print(f"Erreur lors du traitement du message: {e}")
