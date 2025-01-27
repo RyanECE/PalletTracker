@@ -2,7 +2,7 @@ import math
 import serial.tools.list_ports
 from typing import Tuple, Optional
 import numpy as np
-from serial_sender import send_position
+from palet_position_sender import send_position
 class PuckPositionCalculator:
     def __init__(self):
         # Position des capteurs (x, y) en mètres
