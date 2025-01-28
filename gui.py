@@ -179,15 +179,12 @@ class RollerHockeyApp(QMainWindow):
         try:
             if self.mqtt_client is None:
                 self.mqtt_client = MQTTClient(
-                message_callback=self.update_puck_position,
+                    message_callback=self.update_puck_position,
                     connection_callback=self.connection_status_changed
                 )
+                self.mqtt_client.start_mosquitto()  # Démarrer Mosquitto avant de connecter le client
                 self.mqtt_client.start_mqtt()
-                self.message_area.append("Démarrage du client MQTT...\n")
-
-                # Démarrer MQTT dans un thread séparé
-                thread = threading.Thread(target=self.mqtt_handler.run, daemon=True)
-                thread.start()
+                print("Démarrage du client MQTT...")
 
                 print("MQTT démarré via le bouton.")
         except Exception as e:
@@ -201,7 +198,7 @@ class RollerHockeyApp(QMainWindow):
             try:
                 self.mqtt_client.stop_mqtt()
                 self.mqtt_client = None
-                self.message_area.append("Client MQTT arrêté\n")
+                print("Client MQTT arrêté")
                 self.connection_status_changed(False)
             except Exception as e:
                 self.show_error("Erreur d'arrêt", f"Erreur lors de l'arrêt du client MQTT: {str(e)}")
