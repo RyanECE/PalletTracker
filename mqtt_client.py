@@ -60,22 +60,6 @@ class MQTTClient:
             if self.connection_callback:
                 self.connection_callback(False)
 
-    # def on_message(self, client, userdata, msg):
-    #     try:
-    #         print("\n=== Message Reçu ===")
-    #         payload = msg.payload.decode()
-    #         print(f"Données reçues: {payload}")
-            
-    #         if msg.topic == "capteur/HG":
-    #             self.message_callback(float(payload), None, None)
-    #         elif msg.topic == "capteur/HD":
-    #             self.message_callback(None, float(payload), None)
-    #         elif msg.topic == "capteur/BM":
-    #             self.message_callback(None, None, float(payload))
-
-    #     except Exception as e:
-    #         print(f"Erreur lors du traitement du message: {e}")
-
     def on_message(self, client, userdata, msg):
         try:
             print("\n=== Message Reçu ===")

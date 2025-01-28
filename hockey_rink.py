@@ -18,7 +18,7 @@ class HockeyRink(QWidget):
         self.puck_y = self.real_height / 2
         
         # Taille du palet
-        self.puck_size = 0.5
+        self.puck_size = 0.5 * (self.real_width / 40.0)
         
         # Positions des capteurs
         self.sensors = [
@@ -81,14 +81,14 @@ class HockeyRink(QWidget):
         painter.drawLine(int(center_x), int(y), int(center_x), int(y + rink_height))
         
         # Cercle central
-        circle_diameter = 9 * scale
+        circle_diameter = 9 * (self.real_width / 40.0) * scale
         circle_x = center_x - circle_diameter / 2
         circle_y = y + (rink_height - circle_diameter) / 2
         painter.drawEllipse(int(circle_x), int(circle_y), int(circle_diameter), int(circle_diameter))
         
         # Zones de but
-        goal_width = 5.5 * scale
-        goal_height = 4.5 * scale
+        goal_width = 5.5 * (self.real_width / 40.0) * scale
+        goal_height = 4.5 * (self.real_width / 40.0) * scale
         painter.drawRect(int(x), int(y + (rink_height - goal_height) / 2), 
                         int(goal_width), int(goal_height))
         painter.drawRect(int(x + rink_width - goal_width), int(y + (rink_height - goal_height) / 2),

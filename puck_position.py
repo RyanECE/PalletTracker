@@ -1,26 +1,14 @@
 import math
-import random
+import serial.tools.list_ports
 from typing import Tuple, Optional
 import numpy as np
-
+from palet_position_sender import send_position
 class PuckPositionCalculator:
     def __init__(self):
         # Position des capteurs (x, y) en mètres
         self.sensor1_pos = (0, 20)    # Capteur en haut à gauche
         self.sensor2_pos = (40, 20)    # Capteur en bas à droite
         self.sensor3_pos = (20, 0)   # Capteur au milieu
-
-    def generate_random_distances(self) -> Tuple[float, float, float]:
-        """Génère des distances aléatoires réalistes pour les trois capteurs"""
-        # Générer une position aléatoire sur le terrain
-        x = random.uniform(0, 40)
-        y = random.uniform(0, 20)
-        
-        # Calculer les distances exactes depuis cette position
-        d1 = round(math.sqrt((x - self.sensor1_pos[0])**2 + (y - self.sensor1_pos[1])**2), 2)
-        d2 = round(math.sqrt((x - self.sensor2_pos[0])**2 + (y - self.sensor2_pos[1])**2), 2)
-        d3 = round(math.sqrt((x - self.sensor3_pos[0])**2 + (y - self.sensor3_pos[1])**2), 2)
-        return d1, d2, d3
 
     def calculate_position(self, d1: float, d2: float, d3: float) -> Optional[Tuple[float, float]]:
         """Calcule la position du palet par trilatération"""
@@ -60,10 +48,12 @@ class PuckPositionCalculator:
             solution = np.linalg.solve(AT_A, AT_b)
             x, y = solution
             
+            
             # Si la solution est hors limites, projeter sur les bords du terrain
             x = max(0, min(40, x))
             y = max(0, min(20, y))
-            
+            # Envoyer les données via le port série
+            send_position(int(x), int(y))
             return x, y
 
         except Exception as e:
