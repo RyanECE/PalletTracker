@@ -2,13 +2,14 @@ import math
 import serial.tools.list_ports
 from typing import Tuple, Optional
 import numpy as np
-from palet_position_sender import send_position
+from palet_position_sender import send_position, send_taille_terrain
 class PuckPositionCalculator:
     def __init__(self):
         # Position des capteurs (x, y) en mètres
-        self.sensor1_pos = (0, 20)    # Capteur en haut à gauche
-        self.sensor2_pos = (40, 20)    # Capteur en bas à droite
-        self.sensor3_pos = (20, 0)   # Capteur au milieu
+        self.sensor1_pos = (0, 9)    # Capteur en haut à gauche
+        self.sensor2_pos = (18, 9)    # Capteur en bas à droite
+        self.sensor3_pos = (9, 0)   # Capteur au milieu
+        send_taille_terrain(18, 9)
 
     def calculate_position(self, d1: float, d2: float, d3: float) -> Optional[Tuple[float, float]]:
         """Calcule la position du palet par trilatération"""
@@ -50,8 +51,8 @@ class PuckPositionCalculator:
             
             
             # Si la solution est hors limites, projeter sur les bords du terrain
-            x = max(0, min(40, x))
-            y = max(0, min(20, y))
+            x = max(0, min(18, x))
+            y = max(0, min(9, y))
             # Envoyer les données via le port série
             send_position(int(x), int(y))
             return x, y
@@ -59,13 +60,13 @@ class PuckPositionCalculator:
         except Exception as e:
             print(f"Erreur lors du calcul de la position: {e}")
             # En cas d'erreur, retourner une position par défaut au centre
-            return 20, 10
+            return 9, 4,5
 
     def validate_distances(self, d1: float, d2: float, d3: float) -> bool:
         """Vérifie si les distances sont physiquement possibles"""
         # Vérifier les limites max avec une petite marge de tolérance
-        max_d12 = math.sqrt(40*40 + 40*40) + 0.1  # Diagonale + marge
-        max_d3 = math.sqrt(20*20 + 20*20) + 0.1   # Distance max au centre + marge
+        max_d12 = math.sqrt(18*18 + 18*18) + 0.1  # Diagonale + marge
+        max_d3 = math.sqrt(9*9 + 9*9) + 0.1   # Distance max au centre + marge
         
         if d1 < 0 or d2 < 0 or d3 < 0:
             return False
@@ -76,4 +77,4 @@ class PuckPositionCalculator:
         return True
 
     def reset_to_center(self):
-        send_position(20, 10)  # Centre du terrain (40/2, 20/2)
+        send_position(9, 4,5)  # Centre du terrain (40/2, 20/2)

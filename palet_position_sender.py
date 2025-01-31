@@ -12,3 +12,13 @@ def send_position(x: float, y: float):
         sock.close()
     except Exception as e:
         print(f"Erreur : {e}")
+
+def send_taille_terrain(x: float, y: float):
+    try:
+        message = f"Xmax={x},Ymax={y}\n"
+        print(f"Envoi du message : {message}")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(message.encode(), (udp_ip, udp_port))
+        sock.close()
+    except Exception as e:
+        print(f"Erreur : {e}")
