@@ -1,6 +1,5 @@
 import socket
 import threading
-import json
 from typing import Dict, Callable
 
 class UDPDiscoveryServer:

@@ -1,6 +1,6 @@
 # hockey_rink.py
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtCore import QRect
 from PySide6.QtGui import QPainter, QPen, QColor, QBrush
 from puck_position import PuckPositionCalculator
 

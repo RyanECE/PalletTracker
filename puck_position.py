@@ -1,5 +1,4 @@
 import math
-import serial.tools.list_ports
 from typing import Tuple, Optional
 import numpy as np
 from palet_position_sender import send_position, send_taille_terrain

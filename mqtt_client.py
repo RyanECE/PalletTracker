@@ -1,7 +1,6 @@
 import os
 import platform
 import subprocess
-import json
 import time
 import paho.mqtt.client as mqtt
 
