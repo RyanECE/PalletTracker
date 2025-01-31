@@ -8,9 +8,8 @@ from PySide6.QtCore import Signal, QObject, Slot
 from mqtt_client import MQTTClient
 from udp_discovery import UDPDiscoveryServer
 from hockey_rink import HockeyRink
-import json
 import socket
-import threading
+from match_mode import MatchMode
 
 class SignalManager(QObject):
     esp32_discovered = Signal(str, str)  # device_name, mac_address
@@ -66,20 +65,14 @@ class RollerHockeyApp(QMainWindow):
         self.layout = QVBoxLayout()
         self.central_widget.setLayout(self.layout)
         
-        # Titre
-        self.title_label = QLabel("Suivi de la position du palet")
-        self.title_label.setStyleSheet("font-size: 24px; margin: 10px;")
-        self.layout.addWidget(self.title_label)
+        # Mode match (maintenant en premier)
+        self.match_mode = MatchMode(self)
+        self.layout.addWidget(self.match_mode)
         
-        # Terrain de hockey
+        # Terrain de hockey (maintenant en deuxième)
         self.hockey_rink = HockeyRink()
         self.layout.addWidget(self.hockey_rink)
         
-        # Bouton de test
-        # test_button = QPushButton("Tester position aléatoire")
-        # test_button.clicked.connect(self.test_random_position)
-        # self.layout.addWidget(test_button)
-
         # Contrôles MQTT
         mqtt_container = QWidget()
         mqtt_layout = QVBoxLayout(mqtt_container)  
@@ -92,7 +85,7 @@ class RollerHockeyApp(QMainWindow):
         self.status_label = QLabel("Status: Déconnecté")
         self.status_label.setStyleSheet("color: red;")
         status_button_layout.addWidget(self.status_label)
-            
+                
         status_button_layout.addStretch()
 
         # Boutons MQTT
@@ -113,7 +106,7 @@ class RollerHockeyApp(QMainWindow):
         devices_layout = QVBoxLayout(devices_container)
         devices_layout.setContentsMargins(10, 10, 10, 10)
         
-        self.esp_list_label = QLabel("ESP32 détectés:")
+        self.esp_list_label = QLabel("Palets détectés:")
         self.esp_list_label.setStyleSheet("font-weight: bold;")
         devices_layout.addWidget(self.esp_list_label)
         
@@ -182,11 +175,9 @@ class RollerHockeyApp(QMainWindow):
                     message_callback=self.update_puck_position,
                     connection_callback=self.connection_status_changed
                 )
-                self.mqtt_client.start_mosquitto()  # Démarrer Mosquitto avant de connecter le client
+                self.mqtt_client.start_mosquitto()
                 self.mqtt_client.start_mqtt()
                 print("Démarrage du client MQTT...")
-
-                print("MQTT démarré via le bouton.")
         except Exception as e:
             self.show_error("Erreur de démarrage", f"Impossible de démarrer le client MQTT: {str(e)}")
             self.mqtt_client = None

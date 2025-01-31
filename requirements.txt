@@ -3,4 +3,4 @@ pyinstaller
 PySide6
 zeroconf
 numpy
-pyserial
+matplotlib

@@ -47,6 +47,11 @@ class HockeyRink(QWidget):
         """Met à jour la position du palet (en mètres)"""
         self.puck_x = x
         self.puck_y = y
+
+        # Notifier le callback si présent
+        if self.position_callback:
+            self.position_callback(x, y)
+
         self.update()  # Redessiner le widget
 
     def get_scale(self):

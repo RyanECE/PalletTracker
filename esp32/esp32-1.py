@@ -9,11 +9,8 @@ SSID = "Virus"
 PASSWORD = "e8f8e0bb"
 
 # Configuration MQTT
-<<<<<<< HEAD
-MQTT_SERVER = "172.20.10.3"  # IP fixe du broker Mosquitto
-=======
-MQTT_SERVER = "192.168.1.67"  # IP fixe du broker Mosquitto
->>>>>>> mqtt
+MQTT_SERVER = "172.20.10.4"  # IP fixe du broker Mosquitto
+# MQTT_SERVER = "192.168.1.67"  # IP fixe du broker Mosquitto
 # MQTT_SERVER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "pallet/rollerhockey"
