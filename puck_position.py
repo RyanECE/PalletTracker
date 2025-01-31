@@ -53,7 +53,7 @@ class PuckPositionCalculator:
             x = max(0, min(40, x))
             y = max(0, min(20, y))
             # Envoyer les données via le port série
-            # send_position(int(x), int(y))
+            send_position(int(x), int(y))
             return x, y
 
         except Exception as e:

@@ -10,7 +10,11 @@ class UDPDiscoveryServer:
         self.udp_socket = None
         self.server_thread = None
         self.esp32_addr = None
-        
+        self.last_esp32_ip = None  # Stockage de la dernière IP
+    
+    def get_last_esp32(self):
+        return self.esp32_addr, self.last_esp32_ip
+
     def start(self):
         self.running = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -37,10 +41,9 @@ class UDPDiscoveryServer:
                 print(f"UDP reçu de {addr}: {message}")
                 
                 if message == "REQUEST_IP":
-                    # Ne traite la requête que si aucun ESP32 n'est connecté
-                    # ou si c'est le même ESP32 qui redemande une IP
                     if self.esp32_addr is None or self.esp32_addr == addr:
                         self.esp32_addr = addr
+                        self.last_esp32_ip = addr[0]  # Stocker l'IP
                         device_name = f"ESP32_{addr[0]}"
                         device_id = addr[0]
                         
@@ -48,6 +51,11 @@ class UDPDiscoveryServer:
                         
                         if self.callback:
                             self.callback(device_name, device_id)
+                    
+            except Exception as e:
+                print(f"Erreur UDP: {e}")
+                if not self.running:
+                    break
                     
             except Exception as e:
                 print(f"Erreur UDP: {e}")

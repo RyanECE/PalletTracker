@@ -417,8 +417,15 @@ class MatchMode(QWidget):
             self.match_timer.stop()
             self.pause_button.setText("Reprendre")
             self.main_app.stop_mqtt()  # Arrêter le suivi
+
+            # Envoyer le signal "stop" à l'ESP32
+            if self.main_app.discovery_server:
+                esp32_addr, esp32_ip = self.main_app.discovery_server.get_last_esp32()
+                if esp32_addr:
+                    self.main_app.discovery_server.send_response(esp32_ip, "stop")
+            
             # Centrer le palet
-            # self.main_app.hockey_rink.position_calculator.reset_to_center()
+            self.main_app.hockey_rink.position_calculator.reset_to_center()
             self.main_app.hockey_rink.set_puck_position(20, 10)
         else:
             # Reprendre
@@ -426,6 +433,12 @@ class MatchMode(QWidget):
             self.match_timer.start(1000)
             self.pause_button.setText("Pause")
             self.main_app.start_mqtt()  # Reprendre le suivi
+
+            # Envoyer le signal "start" à l'ESP32
+            if self.main_app.discovery_server:
+                esp32_addr, esp32_ip = self.main_app.discovery_server.get_last_esp32()
+                if esp32_addr:
+                    self.main_app.discovery_server.send_response(esp32_ip, "start")
     
     def _show_halftime_message(self):
         msg = QMessageBox()
@@ -486,6 +499,12 @@ class MatchMode(QWidget):
                 # Démarrer le suivi du palet
                 self.main_app.start_mqtt()
                 
+                # Envoyer le signal "start" à l'ESP32
+                if self.main_app.discovery_server:
+                    esp32_addr, esp32_ip = self.main_app.discovery_server.get_last_esp32()
+                    if esp32_addr:
+                        self.main_app.discovery_server.send_response(esp32_ip, "start")
+                
                 # Connexion au callback de position
                 self.main_app.hockey_rink.position_callback = self._on_puck_position
         else:
@@ -506,12 +525,18 @@ class MatchMode(QWidget):
         
         # Arrêter le suivi du palet
         self.main_app.stop_mqtt()
+
+        # Envoyer le signal "stop" à l'ESP32
+        if self.main_app.discovery_server:
+            esp32_addr, esp32_ip = self.main_app.discovery_server.get_last_esp32()
+            if esp32_addr:
+                self.main_app.discovery_server.send_response(esp32_ip, "stop")
         
         # Déconnecter le callback de position
         self.main_app.hockey_rink.position_callback = None
         
         # Reset du palet au centre
-        # self.main_app.hockey_rink.position_calculator.reset_to_center()
+        self.main_app.hockey_rink.position_calculator.reset_to_center()
         self.main_app.hockey_rink.set_puck_position(20, 10)
 
     def _on_puck_position(self, x, y):
