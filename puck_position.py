@@ -2,13 +2,32 @@ import math
 from typing import Tuple, Optional
 import numpy as np
 from palet_position_sender import send_position, send_taille_terrain
+from terrain_config import TerrainConfig
+
 class PuckPositionCalculator:
     def __init__(self):
         # Position des capteurs (x, y) en mètres
-        self.sensor1_pos = (0, 20)    # Capteur en haut à gauche
-        self.sensor2_pos = (40, 20)    # Capteur en haut à droite
-        self.sensor3_pos = (20, 0)   # Capteur en bas milieu
-        # send_taille_terrain(18, 9)
+        self.config = TerrainConfig()
+        self.config.add_observer(self)
+        self._update_sensors()
+        self.camera_tracking_enabled = False
+        
+    def set_camera_tracking(self, enabled: bool):
+        """Active ou désactive le suivi caméra"""
+        self.camera_tracking_enabled = enabled
+        if enabled:
+            # Envoyer les dimensions du terrain lors de l'activation
+            send_taille_terrain(40, 20)
+
+    def _update_sensors(self):
+        self.sensor1_pos = (0, self.config.height)
+        self.sensor2_pos = (self.config.width, self.config.height)
+        self.sensor3_pos = (self.config.center_x, 0)
+
+    def on_terrain_dimensions_changed(self, width, height):
+        self._update_sensors()
+        if self.camera_tracking_enabled:
+            send_taille_terrain(width, height)
 
     def calculate_position(self, d1: float, d2: float, d3: float) -> Optional[Tuple[float, float]]:
         """Calcule la position du palet par trilatération"""
@@ -17,6 +36,13 @@ class PuckPositionCalculator:
             x1, y1 = self.sensor1_pos
             x2, y2 = self.sensor2_pos
             x3, y3 = self.sensor3_pos
+            
+            # Vérifier si les distances sont valides
+            if not all(isinstance(d, (int, float)) for d in [d1, d2, d3]) or \
+            any(math.isnan(d) for d in [d1, d2, d3]) or \
+            any(d <= 0 for d in [d1, d2, d3]):
+                print(f"Distances invalides : d1={d1}, d2={d2}, d3={d3}")
+                return self.config.center_x, self.config.center_y
             
             # Carrés des distances
             d1_sq = d1 * d1
@@ -36,36 +62,44 @@ class PuckPositionCalculator:
             
             b = np.array([k2 - k1, k3 - k1])
             
-            # Résoudre le système par la méthode des moindres carrés
-            AT_A = A.T @ A
-            AT_b = A.T @ b
+            # Vérifier le conditionnement de la matrice A
+            if np.linalg.cond(A) > 1e10:  # Si le conditionnement est trop grand
+                print("Matrice mal conditionnée")
+                return self.config.center_x, self.config.center_y
             
-            # Ajouter un petit terme de régularisation pour éviter la singularité
-            epsilon = 1e-10
-            AT_A = AT_A + epsilon * np.eye(2)
-            
-            # Résoudre le système
-            solution = np.linalg.solve(AT_A, AT_b)
-            x, y = solution
-            
-            # Si la solution est hors limites, projeter sur les bords du terrain
-            x = max(0, min(40, x))
-            y = max(0, min(20, y))
-            # Envoyer les données via le port série
-            # send_position(int(x), int(y))
-            print(f"X:{round(x, 2)}, Y:{round(y, 2)}")
-            return x, y
+            # Résoudre le système de manière plus robuste
+            try:
+                solution = np.linalg.lstsq(A, b, rcond=None)[0]
+                x, y = solution
+                
+                # Vérifier si la solution est valide
+                if np.any(np.isnan([x, y])) or np.any(np.isinf([x, y])):
+                    print("Solution invalide (NaN ou Inf)")
+                    return self.config.center_x, self.config.center_y
+                
+                # Limiter les coordonnées aux dimensions du terrain
+                x = max(0, min(self.config.width, x))
+                y = max(0, min(self.config.height, y))
+                
+                # N'envoyer la position que si le suivi caméra est activé
+                if self.camera_tracking_enabled:
+                    send_position(int(x), int(y))
+                
+                print(f"X:{round(x, 2)}, Y:{round(y, 2)}")
+                return x, y
+
+            except np.linalg.LinAlgError as e:
+                print(f"Erreur dans la résolution du système : {e}")
+                return self.config.center_x, self.config.center_y
 
         except Exception as e:
             print(f"Erreur lors du calcul de la position: {e}")
-            # En cas d'erreur, retourner une position par défaut au centre
-            return 20, 10
+            return self.config.center_x, self.config.center_y
 
     def validate_distances(self, d1: float, d2: float, d3: float) -> bool:
         """Vérifie si les distances sont physiquement possibles"""
-        # Vérifier les limites max avec une petite marge de tolérance
-        max_d12 = math.sqrt(40*40 + 40*40) + 0.1  # Diagonale + marge
-        max_d3 = math.sqrt(20*20 + 20*20) + 0.1   # Distance max au centre + marge
+        max_d12 = math.sqrt(self.config.width**2 + self.config.height**2) + 0.1
+        max_d3 = math.sqrt(self.config.center_x**2 + self.config.center_y**2) + 0.1
         
         if d1 < 0 or d2 < 0 or d3 < 0:
             return False
@@ -76,4 +110,6 @@ class PuckPositionCalculator:
         return True
 
     def reset_to_center(self):
-        send_position(20, 10)  # Centre du terrain (40/2, 20/2)
+        """Réinitialise la position au centre"""
+        if self.camera_tracking_enabled:
+            send_position(self.config.center_x, self.config.center_y)

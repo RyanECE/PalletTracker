@@ -2,14 +2,15 @@ import sys
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QLabel,
     QVBoxLayout, QWidget, QPushButton, QHBoxLayout,
-    QMessageBox, QListWidget, QListWidgetItem
+    QMessageBox, QListWidget, QListWidgetItem, QCheckBox
 )
-from PySide6.QtCore import Signal, QObject, Slot
+from PySide6.QtCore import Signal, QObject, Slot, Qt
 from mqtt_client import MQTTClient
 from udp_discovery import UDPDiscoveryServer
 from hockey_rink import HockeyRink
 import socket
 from match_mode import MatchMode
+from terrain_config import TerrainConfig, TerrainDimensionsDialog
 
 class SignalManager(QObject):
     esp32_discovered = Signal(str, str)  # device_name, mac_address
@@ -78,6 +79,23 @@ class RollerHockeyApp(QMainWindow):
         mqtt_layout = QVBoxLayout(mqtt_container)  
         mqtt_layout.setContentsMargins(10, 10, 10, 10)
 
+
+        # Case à cocher pour le suivi caméra dans sa propre ligne
+        camera_tracking_layout = QHBoxLayout()
+        self.camera_tracking_checkbox = QCheckBox("Suivi caméra")
+        self.camera_tracking_checkbox.stateChanged.connect(self._on_camera_tracking_changed)
+        camera_tracking_layout.addWidget(self.camera_tracking_checkbox)
+        camera_tracking_layout.addStretch()  # Pour aligner la case à cocher à gauche
+        mqtt_layout.addLayout(camera_tracking_layout)
+
+        # Personnalisation de la taille du terrain
+        terrain_config_layout = QHBoxLayout()
+        self.terrain_config_button = QPushButton("Configuration du terrain")
+        self.terrain_config_button.clicked.connect(self._show_terrain_config)
+        terrain_config_layout.addWidget(self.terrain_config_button)
+        terrain_config_layout.addStretch()
+        mqtt_layout.addLayout(terrain_config_layout)
+
         # Status et boutons sur la même ligne
         status_button_layout = QHBoxLayout()
 
@@ -117,6 +135,14 @@ class RollerHockeyApp(QMainWindow):
         """)
         devices_layout.addWidget(self.esp_list)
         self.layout.addWidget(devices_container)
+
+    def _show_terrain_config(self):
+        config = TerrainConfig()
+        dialog = TerrainDimensionsDialog(config.width, config.height, self)
+        if dialog.exec():
+            new_width = dialog.width_input.value()
+            new_height = dialog.height_input.value()
+            config.set_dimensions(new_width, new_height)
 
     def update_puck_position(self, d1=None, d2=None, d3=None):
         if d1 is not None:
@@ -289,6 +315,11 @@ class RollerHockeyApp(QMainWindow):
         except Exception as e:
             self.show_error("Erreur de fermeture", f"Erreur lors de la fermeture de l'application: {str(e)}")
             event.accept()
+
+    def _on_camera_tracking_changed(self, state):
+        """Gère le changement d'état de la case à cocher du suivi caméra"""
+        is_enabled = state == Qt.CheckState.Checked.value
+        self.hockey_rink.position_calculator.set_camera_tracking(is_enabled)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
