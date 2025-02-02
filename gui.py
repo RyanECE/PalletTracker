@@ -64,6 +64,8 @@ class RollerHockeyApp(QMainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(5)  # Réduit l'espacement entre les widgets
+        self.layout.setContentsMargins(5, 5, 5, 5)  # Réduit les marges
         self.central_widget.setLayout(self.layout)
         
         # Mode match (maintenant en premier)
@@ -77,48 +79,50 @@ class RollerHockeyApp(QMainWindow):
         # Contrôles MQTT
         mqtt_container = QWidget()
         mqtt_layout = QVBoxLayout(mqtt_container)  
-        mqtt_layout.setContentsMargins(10, 10, 10, 10)
-
+        mqtt_layout.setContentsMargins(5, 5, 5, 5)  # Réduit les marges
+        mqtt_layout.setSpacing(5)  # Réduit l'espacement
 
         # Case à cocher pour le suivi caméra dans sa propre ligne
         camera_tracking_layout = QHBoxLayout()
+        camera_tracking_layout.setSpacing(5)  # Réduit l'espacement
         self.camera_tracking_checkbox = QCheckBox("Suivi caméra")
         self.camera_tracking_checkbox.stateChanged.connect(self._on_camera_tracking_changed)
         camera_tracking_layout.addWidget(self.camera_tracking_checkbox)
-        camera_tracking_layout.addStretch()  # Pour aligner la case à cocher à gauche
+        camera_tracking_layout.addStretch()
         mqtt_layout.addLayout(camera_tracking_layout)
 
         # Personnalisation de la taille du terrain
         terrain_config_layout = QHBoxLayout()
+        terrain_config_layout.setSpacing(5)  # Réduit l'espacement
         self.terrain_config_button = QPushButton("Configuration du terrain")
         self.terrain_config_button.clicked.connect(self._show_terrain_config)
         terrain_config_layout.addWidget(self.terrain_config_button)
         terrain_config_layout.addStretch()
         mqtt_layout.addLayout(terrain_config_layout)
 
-        # Status et boutons sur la même ligne
+        # Status et boutons
         status_button_layout = QHBoxLayout()
-
-        # Status
+        status_button_layout.setSpacing(5)  # Réduit l'espacement
         self.status_label = QLabel("Status: Déconnecté")
         self.status_label.setStyleSheet("color: red;")
         status_button_layout.addWidget(self.status_label)
-                
         status_button_layout.addStretch()
-
         mqtt_layout.addLayout(status_button_layout)
+        
         self.layout.addWidget(mqtt_container)
 
-        # Liste des ESP32 avec titre
+        # Liste des ESP32
         devices_container = QWidget()
         devices_layout = QVBoxLayout(devices_container)
-        devices_layout.setContentsMargins(10, 10, 10, 10)
+        devices_layout.setContentsMargins(5, 5, 5, 5)  # Réduit les marges
+        devices_layout.setSpacing(5)  # Réduit l'espacement
         
         self.esp_list_label = QLabel("Palets détectés:")
         self.esp_list_label.setStyleSheet("font-weight: bold;")
         devices_layout.addWidget(self.esp_list_label)
         
         self.esp_list = QListWidget()
+        self.esp_list.setMaximumHeight(50)  # Limite la hauteur de la liste
         self.esp_list.setStyleSheet("""
             QListWidget {
                 border: 1px solid #cccccc;
@@ -126,7 +130,7 @@ class RollerHockeyApp(QMainWindow):
                 background-color: white;
             }
             QListWidget::item {
-                padding: 5px;
+                padding: 2px;
                 border-bottom: 1px solid #eeeeee;
             }
             QListWidget::item:last {

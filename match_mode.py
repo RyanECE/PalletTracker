@@ -284,7 +284,7 @@ class MatchMode(QWidget):
         
         # En-tête du match
         match_header = QWidget()
-        match_header.setMinimumHeight(120)
+        match_header.setMinimumHeight(150)  # Augmenté la hauteur minimale
         match_header.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         header_layout = QHBoxLayout(match_header)
         header_layout.setContentsMargins(0, 0, 0, 20)
@@ -294,9 +294,9 @@ class MatchMode(QWidget):
         score_font = "font-size: 36px; font-weight: bold;"
         score_button_style = """
             QPushButton {
-                font-size: 18px;
-                padding: 8px 16px;
-                min-width: 60px;
+                font-size: 14px;
+                padding: 5px 15px;
+                min-width: 30px;
                 background-color: #4CAF50;
                 color: white;
                 border-radius: 5px;
@@ -315,11 +315,18 @@ class MatchMode(QWidget):
         self.team1_label = QLabel("-")
         self.team1_label.setStyleSheet(big_font)
         self.team1_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.team1_button = QPushButton("+1")
-        self.team1_button.setStyleSheet(score_button_style)
-        self.team1_button.setEnabled(False)
+        
+        # Boutons pour équipe 1
+        self.team1_plus_button = QPushButton("+1")
+        self.team1_minus_button = QPushButton("-1")
+        self.team1_plus_button.setStyleSheet(score_button_style)
+        self.team1_minus_button.setStyleSheet(score_button_style)
+        self.team1_plus_button.setEnabled(False)
+        self.team1_minus_button.setEnabled(False)
+        
         team1_layout.addWidget(self.team1_label)
-        team1_layout.addWidget(self.team1_button)
+        team1_layout.addWidget(self.team1_plus_button)
+        team1_layout.addWidget(self.team1_minus_button)
         team1_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Widget central pour le temps et le score
@@ -339,11 +346,18 @@ class MatchMode(QWidget):
         self.team2_label = QLabel("-")
         self.team2_label.setStyleSheet(big_font)
         self.team2_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.team2_button = QPushButton("+1")
-        self.team2_button.setStyleSheet(score_button_style)
-        self.team2_button.setEnabled(False)
+        
+        # Boutons pour équipe 2
+        self.team2_plus_button = QPushButton("+1")
+        self.team2_minus_button = QPushButton("-1")
+        self.team2_plus_button.setStyleSheet(score_button_style)
+        self.team2_minus_button.setStyleSheet(score_button_style)
+        self.team2_plus_button.setEnabled(False)
+        self.team2_minus_button.setEnabled(False)
+        
         team2_layout.addWidget(self.team2_label)
-        team2_layout.addWidget(self.team2_button)
+        team2_layout.addWidget(self.team2_plus_button)
+        team2_layout.addWidget(self.team2_minus_button)
         team2_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Ajouter les trois sections à l'en-tête avec des espaces
@@ -391,16 +405,28 @@ class MatchMode(QWidget):
         self.start_button.clicked.connect(self._on_start_match)
         self.pause_button.clicked.connect(self._on_pause_match)
         self.heatmap_button.clicked.connect(self._show_heatmap)
-        self.team1_button.clicked.connect(self._increment_team1_score)
-        self.team2_button.clicked.connect(self._increment_team2_score)
+        self.team1_plus_button.clicked.connect(self._increment_team1_score)
+        self.team1_minus_button.clicked.connect(self._decrement_team1_score)
+        self.team2_plus_button.clicked.connect(self._increment_team2_score)
+        self.team2_minus_button.clicked.connect(self._decrement_team2_score)
 
     def _increment_team1_score(self):
         self.score1 += 1
         self._update_total_score()
     
+    def _decrement_team1_score(self):
+        if self.score1 > 0:
+            self.score1 -= 1
+            self._update_total_score()
+    
     def _increment_team2_score(self):
         self.score2 += 1
         self._update_total_score()
+    
+    def _decrement_team2_score(self):
+        if self.score2 > 0:
+            self.score2 -= 1
+            self._update_total_score()
     
     def _update_total_score(self):
         self.score_label.setText(f"{self.score1} - {self.score2}")
@@ -425,7 +451,6 @@ class MatchMode(QWidget):
                     self.main_app.discovery_server.send_response(esp32_ip, "stop")
             
             # Centrer le palet
-            # self.main_app.hockey_rink.position_calculator.reset_to_center()
             self.main_app.hockey_rink.set_puck_position(20, 10)
         else:
             # Reprendre
@@ -489,8 +514,10 @@ class MatchMode(QWidget):
                 self.pause_button.setText("Pause")
                 
                 # Activer les boutons de score
-                self.team1_button.setEnabled(True)
-                self.team2_button.setEnabled(True)
+                self.team1_plus_button.setEnabled(True)
+                self.team1_minus_button.setEnabled(True)
+                self.team2_plus_button.setEnabled(True)
+                self.team2_minus_button.setEnabled(True)
                 
                 # Démarrer le timer
                 self._update_time_label()
@@ -520,8 +547,10 @@ class MatchMode(QWidget):
         self.pause_button.setText("Pause")
         
         # Désactiver les boutons de score
-        self.team1_button.setEnabled(False)
-        self.team2_button.setEnabled(False)
+        self.team1_plus_button.setEnabled(False)
+        self.team1_minus_button.setEnabled(False)
+        self.team2_plus_button.setEnabled(False)
+        self.team2_minus_button.setEnabled(False)
         
         # Arrêter le suivi du palet
         self.main_app.stop_mqtt()
@@ -536,7 +565,6 @@ class MatchMode(QWidget):
         self.main_app.hockey_rink.position_callback = None
         
         # Reset du palet au centre
-        # self.main_app.hockey_rink.position_calculator.reset_to_center()
         self.main_app.hockey_rink.set_puck_position(20, 10)
 
     def _on_puck_position(self, x, y):
