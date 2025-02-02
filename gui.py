@@ -88,16 +88,6 @@ class RollerHockeyApp(QMainWindow):
                 
         status_button_layout.addStretch()
 
-        # Boutons MQTT
-        self.start_button = QPushButton("Démarrer MQTT")
-        self.start_button.clicked.connect(self.start_mqtt)
-        status_button_layout.addWidget(self.start_button)
-
-        self.stop_button = QPushButton("Arrêter MQTT")
-        self.stop_button.clicked.connect(self.stop_mqtt)
-        self.stop_button.setEnabled(False)
-        status_button_layout.addWidget(self.stop_button)
-
         mqtt_layout.addLayout(status_button_layout)
         self.layout.addWidget(mqtt_container)
 
@@ -199,10 +189,6 @@ class RollerHockeyApp(QMainWindow):
         try:
             self.is_connected = connected
             
-            # Mettre à jour les boutons
-            self.start_button.setEnabled(not connected)
-            self.stop_button.setEnabled(connected)
-            
             # Mettre à jour le label de status
             if connected:
                 self.status_label.setText("Status: Connecté")
@@ -262,7 +248,7 @@ class RollerHockeyApp(QMainWindow):
                     esp_widget.connect_button.setStyleSheet("")
                     esp_widget.send_button.setEnabled(False)
                     esp_widget.is_sending = False
-                    esp_widget.send_button.setText("Démarrer")
+                    esp_widget.send_button.setText(" pallet")
                     esp_widget.send_button.setStyleSheet("")
         except Exception as e:
             self.show_error("Erreur de contrôle", f"Erreur lors de la gestion de la connexion: {str(e)}")
@@ -281,12 +267,12 @@ class RollerHockeyApp(QMainWindow):
                 
                 self.discovery_server.send_response(device_id, "start")  # Envoi de "start"
                 esp_widget.is_sending = True
-                esp_widget.send_button.setText("Arrêter")
+                esp_widget.send_button.setText("Arrêter pallet")
                 esp_widget.send_button.setStyleSheet("background-color: #ffcccc;")
             else:
                 self.discovery_server.send_response(device_id, "stop")  # Envoi de "stop"
                 esp_widget.is_sending = False
-                esp_widget.send_button.setText("Démarrer")
+                esp_widget.send_button.setText("Démarrer pallet")
                 esp_widget.send_button.setStyleSheet("")
         except Exception as e:
             self.show_error("Erreur d'envoi", f"Erreur lors de la gestion des données : {str(e)}")

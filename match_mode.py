@@ -425,7 +425,7 @@ class MatchMode(QWidget):
                     self.main_app.discovery_server.send_response(esp32_ip, "stop")
             
             # Centrer le palet
-            self.main_app.hockey_rink.position_calculator.reset_to_center()
+            # self.main_app.hockey_rink.position_calculator.reset_to_center()
             self.main_app.hockey_rink.set_puck_position(20, 10)
         else:
             # Reprendre
@@ -536,7 +536,7 @@ class MatchMode(QWidget):
         self.main_app.hockey_rink.position_callback = None
         
         # Reset du palet au centre
-        self.main_app.hockey_rink.position_calculator.reset_to_center()
+        # self.main_app.hockey_rink.position_calculator.reset_to_center()
         self.main_app.hockey_rink.set_puck_position(20, 10)
 
     def _on_puck_position(self, x, y):

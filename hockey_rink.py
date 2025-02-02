@@ -8,8 +8,8 @@ class HockeyRink(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Dimensions réelles du terrain en mètres
-        self.real_width = 18.0
-        self.real_height = 9.0
+        self.real_width = 40.0
+        self.real_height = 20.0
         # Marges en pixels pour le dessin
         self.margin = 9
         
@@ -22,9 +22,9 @@ class HockeyRink(QWidget):
         
         # Positions des capteurs
         self.sensors = [
-            (0, 9),    # Capteur 1: haut gauche
-            (18, 9),   # Capteur 2: haut droite
-            (9, 0)     # Capteur 3: bas milieu
+            (0, 20),    # Capteur 1: haut gauche
+            (40, 20),   # Capteur 2: haut droite
+            (20, 0)     # Capteur 3: bas milieu
         ]
         
         # Calculateur de position

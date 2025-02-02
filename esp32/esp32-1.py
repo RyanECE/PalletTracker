@@ -9,8 +9,8 @@ SSID = "Virus"
 PASSWORD = "e8f8e0bb"
 
 # Configuration MQTT
-MQTT_SERVER = "172.20.10.4"  # IP fixe du broker Mosquitto
-# MQTT_SERVER = "192.168.1.67"  # IP fixe du broker Mosquitto
+# MQTT_SERVER = "172.20.10.4"  # IP fixe du broker Mosquitto
+MQTT_SERVER = "192.168.1.193"  # IP fixe du broker Mosquitto
 # MQTT_SERVER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "pallet/rollerhockey"
@@ -53,6 +53,11 @@ def send_mqtt_data(client, topic):
     distance1 = round(random.uniform(0, 44), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
     distance2 = round(random.uniform(0, 44), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
     distance3 = round(random.uniform(0, 28), 2)  # Génère un nombre aléatoire entre 0 et 40.78, arrondi à deux décimales
+    
+    # distance1 = 22.36
+    # distance2 = 22.36
+    # distance3 = 10
+    
     
     payload = f"84:{distance3};85:{distance2};86:{distance1}"
     result = client.publish(topic, payload)  # Convertit la distance en chaîne de caractères avant de l'envoyer
