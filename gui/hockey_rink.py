@@ -1,9 +1,8 @@
-# hockey_rink.py
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QPainter, QPen, QColor, QBrush
-from puck_position import PuckPositionCalculator
-from terrain_config import TerrainConfig
+from tracking.puck_position import PuckPositionCalculator
+from gui.terrain_config import TerrainConfig
 
 class HockeyRink(QWidget):
     def __init__(self, parent=None):

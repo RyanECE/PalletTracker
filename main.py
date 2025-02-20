@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from gui import RollerHockeyApp
+from gui.gui import RollerHockeyApp
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)  # Créer l'instance QApplication en premier

@@ -1,10 +1,10 @@
+import numpy as np
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QLineEdit, QPushButton, QSpinBox, QDialog, QSizePolicy,QMessageBox
 )
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPainter, QPen, QColor, QBrush, QLinearGradient
-import numpy as np
 
 class MatchConfigDialog(QDialog):
     def __init__(self, parent=None):

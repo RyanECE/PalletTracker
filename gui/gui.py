@@ -1,16 +1,16 @@
 import sys
+import socket
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QLabel,
     QVBoxLayout, QWidget, QPushButton, QHBoxLayout,
     QMessageBox, QListWidget, QListWidgetItem, QCheckBox
 )
 from PySide6.QtCore import Signal, QObject, Slot, Qt
-from mqtt_client import MQTTClient
-from udp_discovery import UDPDiscoveryServer
-from hockey_rink import HockeyRink
-import socket
-from match_mode import MatchMode
-from terrain_config import TerrainConfig, TerrainDimensionsDialog
+from gui.hockey_rink import HockeyRink
+from gui.terrain_config import TerrainConfig, TerrainDimensionsDialog
+from networking.mqtt_client import MQTTClient
+from networking.udp_discovery import UDPDiscoveryServer
+from match.match_mode import MatchMode
 
 class SignalManager(QObject):
     esp32_discovered = Signal(str, str)  # device_name, mac_address
@@ -155,10 +155,6 @@ class RollerHockeyApp(QMainWindow):
             self.d2 = d2
         if d3 is not None:
             self.d3 = d3
-
-        print(f"Données reçues HG: {self.d1}")
-        print(f"Données reçues HD: {self.d2}")
-        print(f"Données reçues BM: {self.d3}")
         if self.d1 is not None and self.d2 is not None and self.d3 is not None:
             try:
                 self.hockey_rink.update_from_distances(self.d1, self.d2, self.d3)
@@ -197,7 +193,6 @@ class RollerHockeyApp(QMainWindow):
                 )
                 self.mqtt_client.start_mosquitto()
                 self.mqtt_client.start_mqtt()
-                print("Démarrage du client MQTT...")
         except Exception as e:
             self.show_error("Erreur de démarrage", f"Impossible de démarrer le client MQTT: {str(e)}")
             self.mqtt_client = None
@@ -209,7 +204,6 @@ class RollerHockeyApp(QMainWindow):
             try:
                 self.mqtt_client.stop_mqtt()
                 self.mqtt_client = None
-                print("Client MQTT arrêté")
                 self.connection_status_changed(False)
             except Exception as e:
                 self.show_error("Erreur d'arrêt", f"Erreur lors de l'arrêt du client MQTT: {str(e)}")

@@ -1,4 +1,3 @@
-# terrain_config.py
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton
 
 class TerrainDimensionsDialog(QDialog):

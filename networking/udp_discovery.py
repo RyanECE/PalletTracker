@@ -37,7 +37,6 @@ class UDPDiscoveryServer:
             try:
                 data, addr = self.udp_socket.recvfrom(1024)
                 message = data.decode()
-                print(f"UDP reçu de {addr}: {message}")
                 
                 if message == "REQUEST_IP":
                     if self.esp32_addr is None or self.esp32_addr == addr:
@@ -45,9 +44,7 @@ class UDPDiscoveryServer:
                         self.last_esp32_ip = addr[0]  # Stocker l'IP
                         device_name = f"ESP32_{addr[0]}"
                         device_id = addr[0]
-                        
-                        print(f"ESP32 détecté à {addr}")
-                        
+
                         if self.callback:
                             self.callback(device_name, device_id)
                     
@@ -64,11 +61,9 @@ class UDPDiscoveryServer:
     def send_response(self, device_id: str, message):
         try:
             if self.esp32_addr is None:
-                print("Aucun ESP32 n'a été détecté")
                 return False
                 
             if isinstance(message, str):
-                print(f"Envoi '{message}' à {self.esp32_addr}")
                 sent = self.udp_socket.sendto(message.encode(), self.esp32_addr)
                 if message == "deconnect":
                     self.esp32_addr = None

@@ -13,8 +13,7 @@ class MQTTClient:
         self.message_callback = message_callback
         self.connection_callback = connection_callback
         self.system = platform.system().lower()  # Détecte l'OS en cours
-        self.architecture = self._get_architecture()  # Detects the architecture
-        print(f"Architecture detected: {self.architecture}")  # Debugging line
+        self.architecture = self._get_architecture()  # Détecte l'architecture
         self.mosquitto_path = self._get_mosquitto_path()
         self.mosquitto_process = None  # Stocke le processus Mosquitto
 
@@ -35,10 +34,7 @@ class MQTTClient:
     def start_mosquitto(self):
         """Démarrer le service Mosquitto avec la configuration spécifique."""
         if self.mosquitto_process and self.mosquitto_process.poll() is None:
-            print("Le service Mosquitto est déjà en cours d'exécution.")
             return
-
-        print("Démarrage du service Mosquitto...")
         
         # Configure LD_LIBRARY_PATH only for Linux
         if self.system == "linux":
@@ -47,23 +43,17 @@ class MQTTClient:
             new_ld_library_path = f"{mosquitto_bin_dir}:{current_ld_library_path}"
             os.environ["LD_LIBRARY_PATH"] = new_ld_library_path
 
-        config_path = os.path.join(os.path.dirname(__file__), 'mosquitto', 'mosquitto.conf')
+        config_path = os.path.join(os.path.dirname(__file__), '..', 'mosquitto', 'mosquitto.conf')
         start_cmd = [self.mosquitto_path, "-c", config_path]
         self.mosquitto_process = subprocess.Popen(start_cmd)
         time.sleep(2)  # Attendez que le service Mosquitto démarre
-        if self.mosquitto_process.poll() is None:
-            print("Service Mosquitto démarré avec succès.")
-        else:
-            print("Échec du démarrage du service Mosquitto.")
 
     def stop_mosquitto(self):
         """Arrêter le service Mosquitto."""
         if self.mosquitto_process and self.mosquitto_process.poll() is None:
-            print("Arrêt du service Mosquitto...")
             self.mosquitto_process.terminate()
             try:
                 self.mosquitto_process.wait(timeout=5)
-                print("Service Mosquitto arrêté avec succès.")
             except subprocess.TimeoutExpired:
                 print("Le processus Mosquitto ne s'est pas arrêté, forçant l'arrêt...")
                 self.mosquitto_process.kill()
@@ -80,7 +70,7 @@ class MQTTClient:
 
     def _get_mosquitto_path(self):
         """Obtient le chemin vers l'exécutable Mosquitto."""
-        base_path = os.path.join(os.path.dirname(__file__), 'mosquitto')
+        base_path = os.path.join(os.path.dirname(__file__), '..', 'mosquitto')
         if self.system == "windows":
             return os.path.join(base_path, 'windows', self.architecture,'mosquitto.exe')
         elif self.system == "darwin":  # macOS
@@ -110,7 +100,6 @@ class MQTTClient:
             port = 1883
             self.mqtt_client.connect(broker, port)
             self.mqtt_client.loop_start()
-            print("Connexion MQTT démarrée...")
         except Exception as e:
             print(f"Erreur lors du démarrage MQTT: {e}")
             self.stop_mqtt()
@@ -128,23 +117,19 @@ class MQTTClient:
                 self.connection_callback(False)
 
             self.stop_mosquitto()  # Arrête le service Mosquitto
-            print("Arrêt du client MQTT réussi")
         except Exception as e:
             print(f"Erreur lors de l'arrêt du client MQTT: {e}")
             raise
 
     def on_disconnect(self, client, userdata, rc):
         """Appelé lors de la déconnexion du broker MQTT"""
-        print(f"Déconnecté du broker MQTT avec code: {rc}")
         if self.connection_callback:
             self.connection_callback(False)
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            print("Connecté au broker MQTT")
             topic = "pallet/rollerhockey"
             client.subscribe(topic, 0)
-            print("Abonné aux topics: pallet/rollerhockey")
             if self.connection_callback:
                 self.connection_callback(True)
         else:
@@ -154,7 +139,6 @@ class MQTTClient:
 
     def on_message(self, client, userdata, msg):
         try:
-            print("\n=== Message Reçu ===")
             # Décodage du message MQTT
             payload = msg.payload.decode()
             # Extraction des valeurs
@@ -162,29 +146,17 @@ class MQTTClient:
             values = {int(item.split(":")[0]): float(item.split(":")[1]) for item in data}
 
             # Condition sur les adresses
+            # 84 correspond à d3 qui correspond au capteur situé en bas au mileu (BM)
             if 84 in values:
                 dist = values[84]
-                print(f"L'adresse est 84, la distance est {dist}")
                 self.message_callback(None, None, dist)
-
+            # 85 correspond à d2 qui correspond au capteur situé en haut à droite (HD)
             if 85 in values:
                 dist = values[85]
-                print(f"L'adresse est 85, la distance est {dist}")
                 self.message_callback(None, dist, None)
-
+            # 86 correspond à d1 qui correspond au capteur situé en haut à gauche (HG)
             if 86 in values:
                 dist = values[86]
-                print(f"L'adresse est 86, la distance est {dist}")
                 self.message_callback(dist, None, None)
-            else:
-                print("Adresse non reconnue")
-            # print(f"Données reçues: {payload}")
-            # Traitement du message JSON
-            # data = json.loads(payload)
-            # indices = data.get("index", [])
-            # values = data.get("values", [])
-            # distances = dict(zip(indices, values))
-            # Récupération des 3 positions
-            # self.message_callback(distances.get("HG", None), distances.get("HD", None), distances.get("BM", None))
         except Exception as e:
             print(f"Erreur lors du traitement du message: {e}")

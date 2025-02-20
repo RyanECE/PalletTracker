@@ -1,8 +1,8 @@
 import math
-from typing import Tuple, Optional
 import numpy as np
-from palet_position_sender import send_position, send_taille_terrain
-from terrain_config import TerrainConfig
+from typing import Tuple, Optional
+from networking.palet_position_sender import send_position, send_taille_terrain
+from gui.terrain_config import TerrainConfig
 
 class PuckPositionCalculator:
     def __init__(self):
