@@ -4,7 +4,7 @@ from PySide6.QtGui import QPainter, QPen, QColor, QBrush
 from tracking.puck_position import PuckPositionCalculator
 from gui.terrain_config import TerrainConfig
 
-class HockeyRink(QWidget):
+class HockeyField(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.config = TerrainConfig()
@@ -76,36 +76,36 @@ class HockeyRink(QWidget):
         scale = self.get_scale()
         
         # Calculer les dimensions du terrain en pixels
-        rink_width = self.config.width * scale
-        rink_height = self.config.height * scale
+        field_width = self.config.width * scale
+        field_height = self.config.height * scale
         
         # Centrer le terrain
-        x = (self.width() - rink_width) / 2
-        y = (self.height() - rink_height) / 2
+        x = (self.width() - field_width) / 2
+        y = (self.height() - field_height) / 2
         
         # Dessiner le terrain
         painter.setPen(QPen(QColor(0, 0, 0), 2))
         
         # Rectangle principal (bandes)
-        rink_rect = QRect(int(x), int(y), int(rink_width), int(rink_height))
-        painter.drawRect(rink_rect)
+        field_rect = QRect(int(x), int(y), int(field_width), int(field_height))
+        painter.drawRect(field_rect)
         
         # Ligne centrale
-        center_x = x + rink_width / 2
-        painter.drawLine(int(center_x), int(y), int(center_x), int(y + rink_height))
+        center_x = x + field_width / 2
+        painter.drawLine(int(center_x), int(y), int(center_x), int(y + field_height))
         
         # Cercle central
         circle_diameter = 9 * (self.config.width / 40.0) * scale
         circle_x = center_x - circle_diameter / 2
-        circle_y = y + (rink_height - circle_diameter) / 2
+        circle_y = y + (field_height - circle_diameter) / 2
         painter.drawEllipse(int(circle_x), int(circle_y), int(circle_diameter), int(circle_diameter))
         
         # Zones de but
         goal_width = 5.5 * (self.config.width / 40.0) * scale
         goal_height = 4.5 * (self.config.width / 40.0) * scale
-        painter.drawRect(int(x), int(y + (rink_height - goal_height) / 2), 
+        painter.drawRect(int(x), int(y + (field_height - goal_height) / 2), 
                         int(goal_width), int(goal_height))
-        painter.drawRect(int(x + rink_width - goal_width), int(y + (rink_height - goal_height) / 2),
+        painter.drawRect(int(x + field_width - goal_width), int(y + (field_height - goal_height) / 2),
                         int(goal_width), int(goal_height))
 
         # Dessiner les capteurs (points rouges)

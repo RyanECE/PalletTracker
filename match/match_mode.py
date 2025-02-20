@@ -54,7 +54,7 @@ class MatchConfigDialog(QDialog):
         self.ok_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
 
-class HockeyRinkHeatmap(QWidget):
+class HockeyFieldHeatmap(QWidget):
     def __init__(self, positions, parent=None):
         super().__init__(parent)
         self.positions = positions
@@ -145,20 +145,20 @@ class HockeyRinkHeatmap(QWidget):
         scale = min(scale_x, scale_y)
         
         # Dimensions et position du terrain en pixels
-        rink_width = self.real_width * scale
-        rink_height = self.real_height * scale
-        x = (self.width() - rink_width) / 2
-        y = (self.height() - rink_height) / 2
+        field_width = self.real_width * scale
+        field_height = self.real_height * scale
+        x = (self.width() - field_width) / 2
+        y = (self.height() - field_height) / 2
         
         # Dessiner les éléments du terrain d'abord
-        self._draw_rink_base(painter, x, y, rink_width, rink_height)
+        self._draw_field_base(painter, x, y, field_width, field_height)
         
         # Appliquer le clipping avant de dessiner la heatmap
-        painter.setClipRect(int(x), int(y), int(rink_width), int(rink_height))
+        painter.setClipRect(int(x), int(y), int(field_width), int(field_height))
         
         # Dessiner la heatmap
-        cell_width = rink_width / self.grid_cols
-        cell_height = rink_height / self.grid_rows
+        cell_width = field_width / self.grid_cols
+        cell_height = field_height / self.grid_rows
         
         # Parcourir la grille pour dessiner la heatmap
         for i in range(self.grid_rows):
@@ -183,40 +183,40 @@ class HockeyRinkHeatmap(QWidget):
         painter.setClipping(False)
         
         # Redessiner les bordures du terrain
-        self._draw_rink_borders(painter, x, y, rink_width, rink_height, scale)
+        self._draw_field_borders(painter, x, y, field_width, field_height, scale)
         
         # Dessiner la légende
         self._draw_legend(painter)
 
-    def _draw_rink_base(self, painter, x, y, rink_width, rink_height):
+    def _draw_field_base(self, painter, x, y, field_width, field_height):
         # Fond blanc du terrain
         painter.setBrush(QBrush(Qt.GlobalColor.white))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRect(int(x), int(y), int(rink_width), int(rink_height))
+        painter.drawRect(int(x), int(y), int(field_width), int(field_height))
 
-    def _draw_rink_borders(self, painter, x, y, rink_width, rink_height, scale):
+    def _draw_field_borders(self, painter, x, y, field_width, field_height, scale):
         painter.setPen(QPen(QColor(0, 0, 0), 2))
         painter.setBrush(Qt.BrushStyle.NoBrush)
         
         # Rectangle principal
-        painter.drawRect(int(x), int(y), int(rink_width), int(rink_height))
+        painter.drawRect(int(x), int(y), int(field_width), int(field_height))
         
         # Ligne centrale
-        center_x = x + rink_width / 2
-        painter.drawLine(int(center_x), int(y), int(center_x), int(y + rink_height))
+        center_x = x + field_width / 2
+        painter.drawLine(int(center_x), int(y), int(center_x), int(y + field_height))
         
         # Cercle central
         circle_diameter = 9 * (self.real_width / 40.0) * scale
         circle_x = center_x - circle_diameter / 2
-        circle_y = y + (rink_height - circle_diameter) / 2
+        circle_y = y + (field_height - circle_diameter) / 2
         painter.drawEllipse(int(circle_x), int(circle_y), int(circle_diameter), int(circle_diameter))
         
         # Zones de but
         goal_width = 5.5 * (self.real_width / 40.0) * scale
         goal_height = 4.5 * (self.real_width / 40.0) * scale
-        painter.drawRect(int(x), int(y + (rink_height - goal_height) / 2), 
+        painter.drawRect(int(x), int(y + (field_height - goal_height) / 2), 
                         int(goal_width), int(goal_height))
-        painter.drawRect(int(x + rink_width - goal_width), int(y + (rink_height - goal_height) / 2),
+        painter.drawRect(int(x + field_width - goal_width), int(y + (field_height - goal_height) / 2),
                         int(goal_width), int(goal_height))
 
     def _draw_legend(self, painter):
@@ -249,7 +249,7 @@ class HeatmapDialog(QDialog):
         layout = QVBoxLayout()
         
         # Création du widget de heatmap
-        self.heatmap_widget = HockeyRinkHeatmap(positions)
+        self.heatmap_widget = HockeyFieldHeatmap(positions)
         layout.addWidget(self.heatmap_widget)
         
         # Bouton fermer
@@ -451,7 +451,7 @@ class MatchMode(QWidget):
                     self.main_app.discovery_server.send_response(esp32_ip, "stop")
             
             # Centrer le palet
-            self.main_app.hockey_rink.set_puck_position(20, 10)
+            self.main_app.hockey_field.set_puck_position(20, 10)
         else:
             # Reprendre
             self.match_paused = False
@@ -533,7 +533,7 @@ class MatchMode(QWidget):
                         self.main_app.discovery_server.send_response(esp32_ip, "start")
                 
                 # Connexion au callback de position
-                self.main_app.hockey_rink.position_callback = self._on_puck_position
+                self.main_app.hockey_field.position_callback = self._on_puck_position
         else:
             self._end_match()
 
@@ -562,10 +562,10 @@ class MatchMode(QWidget):
                 self.main_app.discovery_server.send_response(esp32_ip, "stop")
         
         # Déconnecter le callback de position
-        self.main_app.hockey_rink.position_callback = None
+        self.main_app.hockey_field.position_callback = None
         
         # Reset du palet au centre
-        self.main_app.hockey_rink.set_puck_position(20, 10)
+        self.main_app.hockey_field.set_puck_position(20, 10)
 
     def _on_puck_position(self, x, y):
         if self.match_running and not self.match_paused:

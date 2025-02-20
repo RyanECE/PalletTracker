@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QListWidget, QListWidgetItem, QCheckBox
 )
 from PySide6.QtCore import Signal, QObject, Slot, Qt
-from gui.hockey_rink import HockeyRink
+from gui.hockey_field import HockeyField
 from gui.terrain_config import TerrainConfig, TerrainDimensionsDialog
 from networking.mqtt_client import MQTTClient
 from networking.udp_discovery import UDPDiscoveryServer
@@ -73,8 +73,8 @@ class RollerHockeyApp(QMainWindow):
         self.layout.addWidget(self.match_mode)
         
         # Terrain de hockey (maintenant en deuxième)
-        self.hockey_rink = HockeyRink()
-        self.layout.addWidget(self.hockey_rink)
+        self.hockey_field = HockeyField()
+        self.layout.addWidget(self.hockey_field)
         
         # Contrôles MQTT
         mqtt_container = QWidget()
@@ -157,7 +157,7 @@ class RollerHockeyApp(QMainWindow):
             self.d3 = d3
         if self.d1 is not None and self.d2 is not None and self.d3 is not None:
             try:
-                self.hockey_rink.update_from_distances(self.d1, self.d2, self.d3)
+                self.hockey_field.update_from_distances(self.d1, self.d2, self.d3)
             except Exception as e:
                 print(f"Erreur lors de la mise à jour de la position du palet: {str(e)}")
 
@@ -317,7 +317,7 @@ class RollerHockeyApp(QMainWindow):
     def _on_camera_tracking_changed(self, state):
         """Gère le changement d'état de la case à cocher du suivi caméra"""
         is_enabled = state == Qt.CheckState.Checked.value
-        self.hockey_rink.position_calculator.set_camera_tracking(is_enabled)
+        self.hockey_field.position_calculator.set_camera_tracking(is_enabled)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
