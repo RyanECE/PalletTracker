@@ -17,9 +17,12 @@ class PuckPositionCalculator:
         self.camera_tracking_enabled = enabled
         if enabled:
             # Envoyer les dimensions du terrain lors de l'activation
-            send_taille_terrain(40, 20)
+            send_taille_terrain(self.config.width, self.config.height)
 
     def _update_sensors(self):
+        # sensor1_pos qui correspond au capteur situé en bas au mileu (HG)
+        # sensor2_pos qui correspond au capteur situé en bas au mileu (HD)
+        # sensor3_pos qui correspond au capteur situé en bas au mileu (BM)
         self.sensor1_pos = (0, self.config.height)
         self.sensor2_pos = (self.config.width, self.config.height)
         self.sensor3_pos = (self.config.center_x, 0)
@@ -45,6 +48,9 @@ class PuckPositionCalculator:
                 return self.config.center_x, self.config.center_y
             
             # Carrés des distances
+            # d1 qui correspond au capteur situé en bas au mileu (HG)
+            # d2 qui correspond au capteur situé en bas au mileu (HD)
+            # d3 qui correspond au capteur situé en bas au mileu (BM)
             d1_sq = d1 * d1
             d2_sq = d2 * d2
             d3_sq = d3 * d3

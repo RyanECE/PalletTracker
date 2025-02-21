@@ -44,6 +44,9 @@ class ESPListItem(QWidget):
 class RollerHockeyApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        # d1 qui correspond au capteur situé en bas au mileu (HG)
+        # d2 qui correspond au capteur situé en bas au mileu (HD)
+        # d3 qui correspond au capteur situé en bas au mileu (BM)
         self.d1 = None
         self.d2 = None
         self.d3 = None

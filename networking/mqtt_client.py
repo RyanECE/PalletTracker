@@ -18,7 +18,7 @@ class MQTTClient:
         self.mosquitto_process = None  # Stocke le processus Mosquitto
 
     def _get_architecture(self):
-        """Detects the system architecture."""
+        """Dectection de l'architecture système"""
         arch = platform.machine().lower()
         if arch in ["x86_64", "amd64"]:
             return "x86_64"
@@ -36,7 +36,7 @@ class MQTTClient:
         if self.mosquitto_process and self.mosquitto_process.poll() is None:
             return
         
-        # Configure LD_LIBRARY_PATH only for Linux
+        # Configure LD_LIBRARY_PATH pour linux lorsque l'application ce lance via exécutable généré par PyInstaller 
         if self.system == "linux":
             mosquitto_bin_dir = os.path.join(os.path.dirname(self.mosquitto_path), 'lib')
             current_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")

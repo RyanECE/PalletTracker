@@ -42,7 +42,7 @@ class UDPDiscoveryServer:
                     if self.esp32_addr is None or self.esp32_addr == addr:
                         self.esp32_addr = addr
                         self.last_esp32_ip = addr[0]  # Stocker l'IP
-                        device_name = f"ESP32_{addr[0]}"
+                        device_name = f"Palet_{addr[0]}"
                         device_id = addr[0]
 
                         if self.callback:

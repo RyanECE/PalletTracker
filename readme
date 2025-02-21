@@ -34,3 +34,6 @@
 │
 └── README.md                         # Documentation du projet
 
+# Prendre la position du palet 
+1 - Démarrer l'ESP32 présent dans le palet => Le connecté en Wifi (cf. Document de prise en main du projet)
+2 - L'ESP32 apparaît dans la zone dédié et appuyer sur "Connecté"
