@@ -36,7 +36,7 @@ const uint8_t PIN_SS = 4;
 
 // Network configuration
 const int udp_local_port = 12345;    // Local UDP port
-const char* mqtt_topic = "pallet/rollerhockey"; // MQTT topic
+const char* mqtt_topic = "palet/rollerhockey"; // MQTT topic
 const int mqtt_port = 1883;          // MQTT port
 bool ready_to_send_mqtt = false;     // Indicates if ESP is ready to send MQTT
 bool mqtt_sending_active = false;    // Indicates if MQTT sending is active

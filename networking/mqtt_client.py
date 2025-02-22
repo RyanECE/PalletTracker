@@ -128,7 +128,7 @@ class MQTTClient:
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            topic = "pallet/rollerhockey"
+            topic = "palet/rollerhockey"
             client.subscribe(topic, 0)
             if self.connection_callback:
                 self.connection_callback(True)

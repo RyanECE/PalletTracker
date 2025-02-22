@@ -9,10 +9,10 @@ UDP_BROADCAST_IP = "255.255.255.255"
 BUFFER_SIZE = 255
 
 # Configuration MQTT
-MQTT_TOPIC = "pallet/rollerhockey"
+MQTT_TOPIC = "palet/rollerhockey"
 MQTT_PORT = 1883
 mqtt_server_ip = None
-mqtt_client = mqtt.Client(client_id="pallet", callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+mqtt_client = mqtt.Client(client_id="palet", callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
 
 
 # Variables de contrôle

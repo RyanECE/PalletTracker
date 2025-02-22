@@ -275,7 +275,7 @@ class RollerHockeyApp(QMainWindow):
                     esp_widget.connect_button.setStyleSheet("")
                     esp_widget.send_button.setEnabled(False)
                     esp_widget.is_sending = False
-                    esp_widget.send_button.setText(" pallet")
+                    esp_widget.send_button.setText(" palet")
                     esp_widget.send_button.setStyleSheet("")
         except Exception as e:
             self.show_error("Erreur de contrôle", f"Erreur lors de la gestion de la connexion: {str(e)}")
@@ -294,12 +294,12 @@ class RollerHockeyApp(QMainWindow):
                 
                 self.discovery_server.send_response(device_id, "start")  # Envoi de "start"
                 esp_widget.is_sending = True
-                esp_widget.send_button.setText("Arrêter pallet")
+                esp_widget.send_button.setText("Arrêter palet")
                 esp_widget.send_button.setStyleSheet("background-color: #ffcccc;")
             else:
                 self.discovery_server.send_response(device_id, "stop")  # Envoi de "stop"
                 esp_widget.is_sending = False
-                esp_widget.send_button.setText("Démarrer pallet")
+                esp_widget.send_button.setText("Démarrer palet")
                 esp_widget.send_button.setStyleSheet("")
         except Exception as e:
             self.show_error("Erreur d'envoi", f"Erreur lors de la gestion des données : {str(e)}")

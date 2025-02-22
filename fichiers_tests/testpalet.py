@@ -101,7 +101,7 @@ class RollerHockeyField(QWidget):
         # Envoyer via MQTT
         payload = f"84:{d3:.2f};85:{d2:.2f};86:{d1:.2f}"
         try:
-            self.client.publish("pallet/rollerhockey", payload)
+            self.client.publish("palet/rollerhockey", payload)
             print(f"Envoyé: {payload}")
         except Exception as e:
             print(f"Erreur d'envoi MQTT: {e}")

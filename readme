@@ -37,7 +37,7 @@
 
 ## Description
 
-PuckTracker est une application open-source faite en pythonpermetant de récupéré la position d'un palet de roller hockey et de transmettre la position du palet pour qu'une caméra suive la position du pallet
+PuckTracker est une application open-source faite en pythonpermetant de récupéré la position d'un palet de roller hockey et de transmettre la position du palet pour qu'une caméra suive la position du palet
 
 ## Pour installer le PuckTracker
 ```bash
