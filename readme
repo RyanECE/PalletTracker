@@ -1,5 +1,6 @@
-# Structure du projet 
-/PalletTracker/
+# PuckTracker
+## Structure du projet 
+/PuckTracker/
 │── main.py                           # Fichier principal
 │
 ├── gui/                              # Interface graphique
@@ -34,6 +35,28 @@
 │
 └── README.md                         # Documentation du projet
 
-# Prendre la position du palet 
-1 - Démarrer l'ESP32 présent dans le palet => Le connecté en Wifi (cf. Document de prise en main du projet)
-2 - L'ESP32 apparaît dans la zone dédié et appuyer sur "Connecté"
+## Description
+
+PuckTracker est une application open-source faite en pythonpermetant de récupéré la position d'un palet de roller hockey et de transmettre la position du palet pour qu'une caméra suive la position du pallet
+
+## Pour installer le PuckTracker
+```bash
+   git clone https://github.com/RyanECE/PuckTracker.git
+   cd  PuckTracker
+   # Installation
+   pip install -r requirements.txt
+   # Pour lancer l'application
+   python main.py
+
+## Contribution
+
+Les contributions sont les bienvenues ! Pour contribuer :
+
+Forkez le projet.
+Créez une branche pour votre fonctionnalité (git checkout -b feature/AmazingFeature).
+Commitez vos modifications (git commit -m 'Add some AmazingFeature').
+Poussez vers la branche (git push origin feature/AmazingFeature).
+Ouvrez une Pull Request.
+
+# Licence
+Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
